@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="description" content="The Ledger — a character atelier for JanitorAI and SillyTavern. Draft with Claude, count tokens, import and export v2 cards.">
+<title>The Ledger · Character Atelier</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2314110d'/%3E%3Ctext x='16' y='22' font-family='Georgia,serif' font-size='16' fill='%23c6a15f' text-anchor='middle'%3ETL%3C/text%3E%3C/svg%3E">
+<style>
+/* ============================================================= *
+ * THE LEDGER — design tokens                                    *
+ * Dark academia x old-money. Oxblood + brass + hunter green.    *
+ * Two themes; components read tokens, never raw hex.            *
+ * ============================================================= */
+:root{
+  --ground:#14110d; --ground-2:#1b1712; --ground-3:#231e17; --ground-4:#2b251c;
+  --ink:#ece2ce; --ink-soft:#b8ac93; --ink-faint:#877c64;
+  --line:rgba(198,161,95,.20); --line-2:rgba(198,161,95,.38);
+  --oxblood:#9a2d33; --oxblood-2:#b23a40; --on-oxblood:#f4e7d6;
+  --brass:#c6a15f; --brass-2:#dcbd7f; --brass-deep:#a9843f;
+  --green:#5c7d62; --green-soft:#26382b; --on-green:#e9f0e6;
+  --danger:#c14d44; --danger-soft:#3a201d;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.75);
+  --shadow-sm:0 8px 24px -14px rgba(0,0,0,.7);
+  --radius:4px; --radius-lg:8px;
+  --serif:"Hoefler Text","Baskerville Old Face",Baskerville,"Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,Cambria,"Times New Roman",serif;
+  --mono:"Consolas","SFMono-Regular",ui-monospace,Menlo,"DejaVu Sans Mono",monospace;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --ground:#e9dfc7; --ground-2:#f1e9d5; --ground-3:#e3d8bd; --ground-4:#dccfb0;
+    --ink:#241d13; --ink-soft:#5c5038; --ink-faint:#877a5e;
+    --line:rgba(120,90,40,.28); --line-2:rgba(120,90,40,.5);
+    --oxblood:#7c2126; --oxblood-2:#932a2f; --on-oxblood:#f6ecdb;
+    --brass:#946f2c; --brass-2:#a9843f; --brass-deep:#7c5c22;
+    --green:#3f6041; --green-soft:#cdd9c3; --on-green:#1f2c1f;
+    --danger:#a23a32; --danger-soft:#e9cfc9;
+    --shadow:0 22px 50px -26px rgba(60,40,15,.5);
+    --shadow-sm:0 10px 26px -18px rgba(60,40,15,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#14110d; --ground-2:#1b1712; --ground-3:#231e17; --ground-4:#2b251c;
+  --ink:#ece2ce; --ink-soft:#b8ac93; --ink-faint:#877c64;
+  --line:rgba(198,161,95,.20); --line-2:rgba(198,161,95,.38);
+  --oxblood:#9a2d33; --oxblood-2:#b23a40; --on-oxblood:#f4e7d6;
+  --brass:#c6a15f; --brass-2:#dcbd7f; --brass-deep:#a9843f;
+  --green:#5c7d62; --green-soft:#26382b; --on-green:#e9f0e6;
+  --danger:#c14d44; --danger-soft:#3a201d;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.75); --shadow-sm:0 8px 24px -14px rgba(0,0,0,.7);
+}
+:root[data-theme="light"]{
+  --ground:#e9dfc7; --ground-2:#f1e9d5; --ground-3:#e3d8bd; --ground-4:#dccfb0;
+  --ink:#241d13; --ink-soft:#5c5038; --ink-faint:#877a5e;
+  --line:rgba(120,90,40,.28); --line-2:rgba(120,90,40,.5);
+  --oxblood:#7c2126; --oxblood-2:#932a2f; --on-oxblood:#f6ecdb;
+  --brass:#946f2c; --brass-2:#a9843f; --brass-deep:#7c5c22;
+  --green:#3f6041; --green-soft:#cdd9c3; --on-green:#1f2c1f;
+  --danger:#a23a32; --danger-soft:#e9cfc9;
+  --shadow:0 22px 50px -26px rgba(60,40,15,.5); --shadow-sm:0 10px 26px -18px rgba(60,40,15,.45);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--body); font-size:16px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, color-mix(in srgb,var(--brass) 6%,transparent), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 27px, var(--line) 27px 28px);
+  background-attachment:fixed;
+}
+:root[data-theme="light"] body{ background-image:
+  radial-gradient(120% 80% at 50% -10%, color-mix(in srgb,var(--brass) 10%,transparent), transparent 60%),
+  repeating-linear-gradient(0deg, transparent 0 27px, var(--line) 27px 28px); }
+h1,h2,h3{font-family:var(--serif); font-weight:600; margin:0; text-wrap:balance}
+button{font-family:inherit}
+::selection{background:color-mix(in srgb,var(--oxblood) 55%,transparent); color:var(--on-oxblood)}
+:focus-visible{outline:2px solid var(--brass); outline-offset:2px; border-radius:2px}
+
+.eyebrow{font-family:var(--serif); font-size:.68rem; letter-spacing:.26em; text-transform:uppercase; color:var(--brass); font-weight:600}
+.muted{color:var(--ink-soft)}
+.hairline{height:1px; background:linear-gradient(90deg,transparent,var(--line-2),transparent); border:0}
+
+/* ---------- Masthead ---------- */
+.masthead{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; gap:20px;
+  padding:14px clamp(16px,4vw,40px);
+  background:color-mix(in srgb,var(--ground) 86%,transparent);
+  backdrop-filter:blur(10px) saturate(1.1);
+  border-bottom:1px solid var(--line-2);
+}
+.brand{display:flex; align-items:center; gap:14px; min-width:0}
+.monogram{
+  width:44px; height:44px; flex:none; display:grid; place-items:center;
+  border:1px solid var(--brass); border-radius:50%;
+  color:var(--brass); font-family:var(--serif); font-weight:600; font-size:1.05rem; letter-spacing:.04em;
+  box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--brass) 14%,transparent);
+}
+.brand h1{font-size:clamp(1.15rem,2.6vw,1.5rem); letter-spacing:.02em; line-height:1}
+.brand .sub{font-family:var(--serif); font-size:.64rem; letter-spacing:.28em; text-transform:uppercase; color:var(--ink-faint); margin-top:4px}
+.masthead .spacer{flex:1}
+.actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+  padding:9px 15px; border-radius:var(--radius);
+  background:var(--ground-3); color:var(--ink);
+  border:1px solid var(--line-2); font-size:.86rem; letter-spacing:.02em;
+  transition:.16s ease; white-space:nowrap;
+}
+.btn:hover{border-color:var(--brass); color:var(--brass-2); transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn .ic{font-size:.95em; opacity:.85}
+.btn.ghost{background:transparent}
+.btn.small{padding:6px 11px; font-size:.78rem}
+.btn.primary{
+  background:linear-gradient(180deg,var(--oxblood-2),var(--oxblood));
+  border-color:color-mix(in srgb,var(--oxblood) 60%,var(--brass));
+  color:var(--on-oxblood); box-shadow:var(--shadow-sm);
+}
+.btn.primary:hover{color:#fff; border-color:var(--brass); filter:brightness(1.06)}
+.btn.gilt{border-color:var(--brass); color:var(--brass-2)}
+.btn.gilt:hover{background:color-mix(in srgb,var(--brass) 12%,transparent)}
+.btn[disabled]{opacity:.5; cursor:not-allowed; transform:none!important}
+.btn.danger:hover{border-color:var(--danger); color:var(--danger)}
+
+/* ---------- Layout ---------- */
+main{max-width:1360px; margin:0 auto; padding:clamp(18px,3vw,34px) clamp(16px,4vw,40px) 80px}
+.desk{display:grid; grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr); gap:26px; align-items:start}
+@media (max-width:940px){ .desk{grid-template-columns:1fr} }
+.stack{display:flex; flex-direction:column; gap:22px}
+
+/* ---------- Cards ---------- */
+.card{
+  background:
+    linear-gradient(180deg, color-mix(in srgb,var(--brass) 4%,transparent), transparent 90px),
+    var(--ground-2);
+  border:1px solid var(--line-2); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow); position:relative; overflow:hidden;
+}
+.card::before{content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brass) 8%,transparent)}
+.card-hd{display:flex; align-items:center; gap:12px; padding:16px 20px 12px}
+.card-hd .titles{min-width:0}
+.card-hd h2{font-size:1.12rem; letter-spacing:.01em}
+.card-hd .hint{font-size:.76rem; color:var(--ink-faint); margin-top:2px}
+.card-hd .grow{flex:1}
+.card-bd{padding:6px 20px 20px}
+.card .rule{margin:0 20px; height:1px; background:var(--line); border:0}
+
+/* ---------- Forms ---------- */
+label.field{display:block; margin-top:14px}
+label.field:first-child{margin-top:4px}
+.field .lab{display:flex; align-items:baseline; gap:8px; margin-bottom:6px}
+.field .lab span.k{font-family:var(--serif); font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--brass)}
+.field .lab span.note{font-size:.72rem; color:var(--ink-faint)}
+input[type=text],input[type=password],input[type=number],textarea,select{
+  width:100%; background:var(--ground); color:var(--ink);
+  border:1px solid var(--line-2); border-radius:var(--radius);
+  padding:10px 12px; font-family:var(--body); font-size:.95rem; line-height:1.5;
+  transition:border-color .15s, box-shadow .15s;
+}
+textarea{resize:vertical; min-height:80px}
+input:focus,textarea:focus,select:focus{outline:none; border-color:var(--brass);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--brass) 16%,transparent)}
+textarea.mono, .proof-text{font-family:var(--mono); font-size:.82rem; line-height:1.5}
+select{appearance:none; background-image:
+  linear-gradient(45deg,transparent 50%,var(--brass) 50%),linear-gradient(135deg,var(--brass) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 55%, calc(100% - 13px) 55%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:34px}
+.row{display:flex; gap:12px; flex-wrap:wrap}
+.row > *{flex:1 1 150px}
+
+/* toggle */
+.toggle{display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; font-size:.86rem}
+.toggle input{position:absolute; opacity:0; width:0; height:0}
+.toggle .track{width:42px; height:23px; border-radius:20px; background:var(--ground-4); border:1px solid var(--line-2); position:relative; transition:.18s}
+.toggle .track::after{content:""; position:absolute; top:2px; left:2px; width:17px; height:17px; border-radius:50%; background:var(--ink-soft); transition:.18s}
+.toggle input:checked + .track{background:color-mix(in srgb,var(--oxblood) 55%,transparent); border-color:var(--oxblood)}
+.toggle input:checked + .track::after{transform:translateX(19px); background:var(--brass-2)}
+
+/* avatar dropzone */
+.brief-grid{display:grid; grid-template-columns:112px 1fr; gap:16px}
+@media (max-width:520px){ .brief-grid{grid-template-columns:1fr} }
+.avatar-drop{
+  aspect-ratio:2/3; border:1px dashed var(--line-2); border-radius:var(--radius);
+  display:grid; place-items:center; text-align:center; cursor:pointer; overflow:hidden;
+  background:var(--ground); color:var(--ink-faint); font-size:.72rem; padding:8px; transition:.15s; position:relative;
+}
+.avatar-drop:hover,.avatar-drop.over{border-color:var(--brass); color:var(--brass)}
+.avatar-drop img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.avatar-drop .clear{position:absolute; top:5px; right:5px; z-index:2; background:color-mix(in srgb,var(--ground) 80%,transparent); border:1px solid var(--line-2); color:var(--ink); border-radius:50%; width:22px; height:22px; display:none; place-items:center; cursor:pointer; font-size:.8rem}
+.avatar-drop.has-img .clear{display:grid}
+
+/* ---------- Proof panel ---------- */
+.proof{position:sticky; top:84px}
+@media (max-width:940px){ .proof{position:static} }
+.gauge{margin:2px 0 4px}
+.gauge .bar{height:8px; border-radius:6px; background:var(--ground-4); overflow:hidden; border:1px solid var(--line)}
+.gauge .fill{height:100%; width:0; transition:width .25s, background .25s; background:var(--green)}
+.gauge.warn .fill{background:var(--brass)}
+.gauge.over .fill{background:var(--danger)}
+.gauge .read{display:flex; justify-content:space-between; align-items:baseline; margin-top:7px; font-size:.78rem}
+.gauge .read b{font-family:var(--mono); font-size:.92rem; color:var(--ink); font-variant-numeric:tabular-nums}
+.gauge .read .status{font-family:var(--serif); letter-spacing:.14em; text-transform:uppercase; font-size:.66rem}
+.gauge.ok .status{color:var(--green)} .gauge.warn .status{color:var(--brass)} .gauge.over .status{color:var(--danger)}
+.proof-text{
+  width:100%; background:var(--ground); border:1px solid var(--line-2); border-radius:var(--radius);
+  padding:12px; max-height:44vh; overflow:auto; white-space:pre-wrap; word-break:break-word; color:var(--ink);
+}
+.proof-actions{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px}
+.proof-actions .btn{justify-content:center}
+.proof-actions .full{grid-column:1/-1}
+.usage{margin-top:10px; font-size:.72rem; color:var(--ink-faint); font-family:var(--mono); display:none}
+.usage.show{display:block}
+
+/* refine bar */
+.refine{display:flex; gap:8px; margin-top:12px}
+.refine input{flex:1}
+
+/* collapsible */
+details.fold{border-top:1px solid var(--line); margin-top:2px}
+details.fold > summary{list-style:none; cursor:pointer; padding:14px 0 12px; display:flex; align-items:center; gap:10px; font-family:var(--serif); font-size:.74rem; letter-spacing:.16em; text-transform:uppercase; color:var(--brass)}
+details.fold > summary::-webkit-details-marker{display:none}
+details.fold > summary::before{content:"›"; font-size:1.2em; transition:transform .18s; color:var(--brass)}
+details.fold[open] > summary::before{transform:rotate(90deg)}
+
+/* ---------- Modal ---------- */
+.scrim{position:fixed; inset:0; z-index:60; background:rgba(8,6,3,.62); backdrop-filter:blur(3px); display:none; align-items:flex-start; justify-content:center; padding:6vh 16px 16px; overflow:auto}
+.scrim.open{display:flex}
+.modal{width:min(760px,100%); background:var(--ground-2); border:1px solid var(--line-2); border-radius:var(--radius-lg); box-shadow:var(--shadow); position:relative}
+.modal-hd{display:flex; align-items:center; gap:12px; padding:18px 22px; border-bottom:1px solid var(--line)}
+.modal-hd h2{font-size:1.24rem}
+.modal-hd .grow{flex:1}
+.modal-bd{padding:20px 22px 24px}
+.x{cursor:pointer; background:transparent; border:1px solid var(--line-2); color:var(--ink-soft); width:32px; height:32px; border-radius:50%; font-size:1rem; display:grid; place-items:center}
+.x:hover{border-color:var(--danger); color:var(--danger)}
+
+/* library grid */
+.lib-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px}
+.lib-card{border:1px solid var(--line-2); border-radius:var(--radius); overflow:hidden; background:var(--ground); cursor:pointer; transition:.15s; display:flex; flex-direction:column}
+.lib-card:hover{border-color:var(--brass); transform:translateY(-2px); box-shadow:var(--shadow-sm)}
+.lib-thumb{aspect-ratio:2/3; background:var(--ground-3); position:relative; display:grid; place-items:center; overflow:hidden}
+.lib-thumb img{width:100%; height:100%; object-fit:cover}
+.lib-thumb .mono-ph{font-family:var(--serif); font-size:1.8rem; color:var(--brass); opacity:.5}
+.lib-meta{padding:9px 11px; border-top:1px solid var(--line)}
+.lib-meta .nm{font-family:var(--serif); font-size:.92rem; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.lib-meta .dt{font-size:.68rem; color:var(--ink-faint); margin-top:2px; font-family:var(--mono)}
+.lib-empty{text-align:center; padding:40px 16px; color:var(--ink-faint)}
+.lib-actions{display:flex; gap:6px; padding:8px 11px; border-top:1px solid var(--line)}
+.lib-actions .btn{flex:1; justify-content:center; padding:5px}
+
+/* drop overlay */
+#dropOverlay{position:fixed; inset:0; z-index:80; background:color-mix(in srgb,var(--oxblood) 30%,rgba(8,6,3,.8)); display:none; place-items:center; pointer-events:none}
+#dropOverlay.show{display:grid}
+#dropOverlay .box{border:2px dashed var(--brass); border-radius:12px; padding:48px 64px; text-align:center; color:var(--brass-2); background:color-mix(in srgb,var(--ground) 70%,transparent)}
+#dropOverlay .box .big{font-family:var(--serif); font-size:1.5rem; margin-bottom:6px}
+
+/* toast */
+#toaster{position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:90; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none}
+.toast{background:var(--ground-3); border:1px solid var(--line-2); border-left:3px solid var(--brass); color:var(--ink); padding:10px 16px; border-radius:var(--radius); box-shadow:var(--shadow-sm); font-size:.86rem; animation:rise .25s ease}
+.toast.err{border-left-color:var(--danger)} .toast.ok{border-left-color:var(--green)}
+@keyframes rise{from{opacity:0; transform:translateY(8px)}to{opacity:1; transform:none}}
+
+/* banner */
+.banner{margin:0 0 22px; padding:12px 16px; border:1px solid var(--line-2); border-left:3px solid var(--brass); border-radius:var(--radius); background:var(--ground-2); font-size:.85rem; color:var(--ink-soft); display:none; gap:10px; align-items:flex-start}
+.banner.show{display:flex}
+.banner b{color:var(--ink)}
+.spin{width:15px; height:15px; border:2px solid color-mix(in srgb,var(--on-oxblood) 40%,transparent); border-top-color:var(--on-oxblood); border-radius:50%; animation:sp .7s linear infinite; display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important; transition:none!important}}
+.foot{max-width:1360px; margin:0 auto; padding:26px clamp(16px,4vw,40px) 40px; color:var(--ink-faint); font-size:.76rem; display:flex; gap:16px; flex-wrap:wrap; align-items:center; border-top:1px solid var(--line)}
+.foot a{color:var(--brass); text-decoration:none} .foot a:hover{text-decoration:underline}
+kbd{font-family:var(--mono); font-size:.75em; background:var(--ground-4); border:1px solid var(--line-2); border-radius:3px; padding:1px 5px}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="brand">
+    <div class="monogram" aria-hidden="true">TL</div>
+    <div>
+      <h1>The Ledger</h1>
+      <div class="sub">Character Atelier</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="actions">
+    <button class="btn ghost small" id="btnNew" title="Start a fresh entry"><span class="ic">✦</span>New</button>
+    <button class="btn ghost small" id="btnImport" title="Import a SillyTavern card (PNG or JSON)"><span class="ic">⇪</span>Import</button>
+    <button class="btn gilt small" id="btnLibrary"><span class="ic">❏</span>Library</button>
+    <button class="btn ghost small" id="btnTheme" title="Toggle reading-room / day theme" aria-label="Toggle theme">☾</button>
+    <button class="btn ghost small" id="btnSettings" title="API key, model, project memory"><span class="ic">⚙</span>Settings</button>
+  </div>
+</header>
+
+<main>
+  <div class="banner" id="previewBanner">
+    <span>⚑</span>
+    <span><b>Preview mode.</b> Drafting with Claude needs your own API key and can’t run inside this sandboxed preview. Everything else works here: token counting, the template, importing and exporting SillyTavern cards, and the Library. To draft, open the app from the repository (GitHub Pages or a local file) and add your key in Settings.</span>
+  </div>
+
+  <div class="desk">
+    <!-- ============ WORKBENCH ============ -->
+    <div class="stack">
+
+      <!-- Brief -->
+      <section class="card">
+        <div class="card-hd">
+          <div class="titles">
+            <div class="eyebrow">Commission</div>
+            <h2>The Brief</h2>
+            <div class="hint">A short instruction. Claude drafts the full profile to your template.</div>
+          </div>
+        </div>
+        <hr class="rule">
+        <div class="card-bd">
+          <div class="brief-grid">
+            <div>
+              <div class="avatar-drop" id="avatarDrop" title="Drop or click to set a portrait (used for the PNG card)">
+                <button class="clear" id="avatarClear" title="Remove portrait" aria-label="Remove portrait">×</button>
+                <span id="avatarPlaceholder">Portrait<br>drop or click</span>
+              </div>
+            </div>
+            <div>
+              <label class="field" style="margin-top:0">
+                <span class="lab"><span class="k">Character Name</span></span>
+                <input type="text" id="fName" placeholder="e.g. Blair Alcott" autocomplete="off">
+              </label>
+              <label class="field">
+                <span class="lab"><span class="k">Brief</span> <span class="note">who they are, setting, ties to canon</span></span>
+                <textarea id="fBrief" rows="4" placeholder="18-year-old Trinity junior, old-money art dynasty, icy but starved for attention. Ties to Hailey Vanderbilt's circle. Sexuality: bisexual. Keep her a rival to March's self-insert."></textarea>
+              </label>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:14px; align-items:flex-end">
+            <label class="field" style="margin-top:0; flex:2 1 200px">
+              <span class="lab"><span class="k">Model</span></span>
+              <select id="fModel">
+                <option value="claude-sonnet-5">Sonnet 5 — balanced (recommended)</option>
+                <option value="claude-haiku-4-5-20251001">Haiku 4.5 — fastest, cheapest</option>
+                <option value="claude-opus-4-8">Opus 4.8 — richest prose</option>
+                <option value="claude-fable-5">Fable 5 — narrative specialist</option>
+              </select>
+            </label>
+            <label class="toggle" style="flex:1 1 auto; padding-bottom:10px" title="Inject the romantic-enchantment-style skill into narrative sections">
+              <input type="checkbox" id="fStyle" checked>
+              <span class="track"></span>
+              <span>Romantic Enchantment</span>
+            </label>
+          </div>
+
+          <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap">
+            <button class="btn primary" id="btnGenerate"><span class="ic" id="genIcon">✒</span><span id="genLabel">Draft with Claude</span></button>
+            <button class="btn ghost" id="btnTemplate" title="Insert the empty template into the editor">Insert blank template</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile editor -->
+      <section class="card">
+        <div class="card-hd">
+          <div class="titles">
+            <div class="eyebrow">The Entry</div>
+            <h2>Character Profile</h2>
+            <div class="hint">The plaintext code block for JanitorAI. Edits are canonical.</div>
+          </div>
+          <div class="grow"></div>
+          <span class="muted" id="profChars" style="font-size:.74rem; font-family:var(--mono)">0 chars</span>
+        </div>
+        <hr class="rule">
+        <div class="card-bd">
+          <textarea id="fProfile" class="mono" rows="20" spellcheck="false" placeholder="Your character block appears here after drafting. You can also paste or type it directly, or import a card."></textarea>
+          <div class="refine">
+            <input type="text" id="fRefine" placeholder="Ask for a revision (e.g. 'trim NPCs, make her colder to {user}')">
+            <button class="btn gilt" id="btnRefine" title="Send only the current draft plus this instruction">Refine</button>
+          </div>
+
+          <details class="fold" id="foldScenario">
+            <summary>Scenario &amp; first message</summary>
+            <label class="field">
+              <span class="lab"><span class="k">Scenario / Setting</span> <span class="note">→ card “scenario”</span></span>
+              <textarea id="fScenario" rows="3" placeholder="Trinity School, Upper East Side, 2026. The autumn benefit gala..."></textarea>
+            </label>
+            <label class="field">
+              <span class="lab"><span class="k">First Message</span> <span class="note">→ card “first_mes”</span></span>
+              <textarea id="fFirst" class="mono" rows="6" placeholder="The opening scenario message. Ends open for {user}, who is never voiced or acted for."></textarea>
+            </label>
+            <label class="field">
+              <span class="lab"><span class="k">Alternate Greetings</span> <span class="note">separate each with a line of three dashes</span></span>
+              <textarea id="fAlts" class="mono" rows="4" placeholder="Second opener...&#10;---&#10;Third opener..."></textarea>
+            </label>
+          </details>
+
+          <details class="fold" id="foldMeta">
+            <summary>Card metadata (SillyTavern)</summary>
+            <div class="row">
+              <label class="field" style="margin-top:0">
+                <span class="lab"><span class="k">Tags</span> <span class="note">comma separated</span></span>
+                <input type="text" id="fTags" placeholder="oc, trinity, female, dominant" autocomplete="off">
+              </label>
+              <label class="field" style="margin-top:0">
+                <span class="lab"><span class="k">Version</span></span>
+                <input type="text" id="fVersion" placeholder="1.0" autocomplete="off">
+              </label>
+            </div>
+            <div class="row">
+              <label class="field">
+                <span class="lab"><span class="k">Creator</span></span>
+                <input type="text" id="fCreator" placeholder="March" autocomplete="off">
+              </label>
+            </div>
+            <label class="field">
+              <span class="lab"><span class="k">Creator Notes</span></span>
+              <textarea id="fNotes" rows="2" placeholder="Notes shown to users of the card."></textarea>
+            </label>
+            <label class="field">
+              <span class="lab"><span class="k">Example Messages</span> <span class="note">→ card “mes_example”</span></span>
+              <textarea id="fExamples" class="mono" rows="4" placeholder="&lt;START&gt; example dialogue..."></textarea>
+            </label>
+            <label class="field">
+              <span class="lab"><span class="k">System Prompt</span> <span class="note">→ card “system_prompt” (optional)</span></span>
+              <textarea id="fSystem" class="mono" rows="3" placeholder="Per-character system instructions block, if any."></textarea>
+            </label>
+          </details>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ PROOF ============ -->
+    <div>
+      <section class="card proof" id="proofPanel">
+        <div class="card-hd">
+          <div class="titles">
+            <div class="eyebrow">Assay</div>
+            <h2>Proof &amp; Ledger</h2>
+          </div>
+        </div>
+        <hr class="rule">
+        <div class="card-bd">
+          <div class="gauge ok" id="gauge">
+            <div class="bar"><div class="fill" id="gaugeFill"></div></div>
+            <div class="read">
+              <span><b id="tokCount">0</b> <span class="muted">≈ tokens</span> · <span id="wordCount" class="muted">0 words</span></span>
+              <span class="status" id="gaugeStatus">Empty</span>
+            </div>
+          </div>
+          <div class="muted" style="font-size:.72rem; margin:2px 0 12px">Target ~1,800. Soft ceiling 2,150. Estimate only; your tokenizer is authoritative.</div>
+
+          <div class="proof-text" id="proofText" aria-live="polite"><span class="muted">Nothing entered yet.</span></div>
+          <div class="usage" id="usage"></div>
+
+          <div class="proof-actions">
+            <button class="btn" id="btnCopy"><span class="ic">⧉</span>Copy block</button>
+            <button class="btn" id="btnSave"><span class="ic">❏</span>Save entry</button>
+            <button class="btn gilt" id="btnExportJson"><span class="ic">{ }</span>Export JSON</button>
+            <button class="btn gilt" id="btnExportPng"><span class="ic">⬈</span>Export PNG</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  <span>The Ledger · a private atelier for character work.</span>
+  <span class="muted">Cards: SillyTavern spec v2. Keys stay in your browser.</span>
+</footer>
+
+<!-- ============ Settings modal ============ -->
+<div class="scrim" id="settingsScrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <div class="modal-hd">
+      <h2 id="setTitle">Settings</h2>
+      <div class="grow"></div>
+      <button class="x" data-close="settingsScrim" aria-label="Close">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="eyebrow">Claude API</div>
+      <label class="field" style="margin-top:8px">
+        <span class="lab"><span class="k">Anthropic API Key</span> <span class="note">stored only in this browser</span></span>
+        <input type="password" id="setKey" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      </label>
+      <p class="muted" style="font-size:.78rem; margin:8px 0 0">
+        The key is saved to this device’s local storage and sent directly to <code>api.anthropic.com</code> with the direct-browser-access header. It never touches any other server. Get a key at <span style="color:var(--brass)">console.anthropic.com</span>.
+      </p>
+
+      <hr class="hairline" style="margin:20px 0">
+      <div class="eyebrow">Project Memory</div>
+      <div class="hint muted" style="font-size:.78rem; margin:6px 0 8px">Continuity canon, sent to Claude as a <b>cached</b> context block so recurring NPCs and rules carry into every build without re-typing. Edit freely.</div>
+      <label class="field" style="margin-top:0">
+        <textarea id="setMemory" rows="9" class="mono" spellcheck="false"></textarea>
+      </label>
+
+      <hr class="hairline" style="margin:20px 0">
+      <div class="eyebrow">Efficiency</div>
+      <div class="row" style="margin-top:10px">
+        <label class="field" style="margin-top:0">
+          <span class="lab"><span class="k">Max output tokens</span></span>
+          <input type="number" id="setMaxTokens" min="256" max="8192" step="64" value="2600">
+        </label>
+        <div style="flex:2 1 240px; align-self:flex-end; padding-bottom:6px">
+          <label class="toggle" title="Cache the template + memory so repeat drafts are far cheaper">
+            <input type="checkbox" id="setCache" checked><span class="track"></span><span>Prompt caching</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:22px; flex-wrap:wrap">
+        <button class="btn primary" id="btnSaveSettings">Save settings</button>
+        <button class="btn ghost danger" id="btnClearKey">Forget API key</button>
+        <button class="btn ghost" id="btnResetMemory" title="Restore the seeded canon">Reset memory to default</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Library modal ============ -->
+<div class="scrim" id="libraryScrim">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="libTitle">
+    <div class="modal-hd">
+      <h2 id="libTitle">The Library</h2>
+      <span class="muted" id="libCount" style="font-size:.8rem"></span>
+      <div class="grow"></div>
+      <button class="btn small ghost" id="btnLibImport"><span class="ic">⇪</span>Import card</button>
+      <button class="x" data-close="libraryScrim" aria-label="Close">×</button>
+    </div>
+    <div class="modal-bd">
+      <div id="libBody"></div>
+    </div>
+  </div>
+</div>
+
+<div id="dropOverlay"><div class="box"><div class="big">Drop your card</div><div>SillyTavern PNG or JSON</div></div></div>
+<div id="toaster" aria-live="polite"></div>
+
+<input type="file" id="fileAvatar" accept="image/*" hidden>
+<input type="file" id="fileImport" accept=".png,.json,image/png,application/json" hidden>
+
+<script>
+/* =================================================================
+ * THE LEDGER — application
+ * Standalone, dependency-free. Runs from a file:// or GitHub Pages.
+ * Sections: constants · state · token gauge · api · png · cards
+ *           · import/export · library · ui · boot
+ * ================================================================= */
+(function(){
+"use strict";
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+
+/* ---------- constants: the template, memory seed, style skill ---------- */
+const TEMPLATE = `<npcs> [
+- Name: A brief yet detailed 96 word
+  description of any mentioned NPC or
+  side characters, formatted as so:
+  "Name: Gender/sex, age, hair color,
+  eye color, physical traits,
+  personality traits, occupation/role"
+]
+</npcs>
+
+<character_name_here>
+
+[Basic Information
+Given Name:
+Family Name:
+Full Name: (If Asian, family name
+  first, then given/first name)
+Aliases:
+Species: (optional)
+Nationality: (optional)
+Ethnicity: (optional)
+Age:
+Sexuality:
+Occupation/Role: (optional)
+
+Appearance
+- Height:
+- Weight:
+- Complexion/Skin Color:
+- Natural Marks:
+- Eyes:
+- Hair Texture:
+- Hair Color:
+- Hairstyle:
+- Breasts: (If female)
+- Ass:
+
+Scent:
+
+Clothing
+- Brands:
+- At Work/School:
+- Casual:
+- At Parties: ]
+
+[Backstory:
+(General description, brief but
+comprehensive. Around 4-5 paragraphs.) ]
+
+[Current Residence:
+(Location name + brief description) ]
+
+[Relationships
+- {user}: relationship description.
+  "In-character dialogue showing
+  opinion about user here."
+- npc_name: relationship description.
+  "In-character dialogue showing
+  opinion about npc_name here."
+  (repeat for four NPCs) ]
+
+[Personality
+Archetypes:
+Traits:
+Likes:
+Loves:
+Dislikes:
+Hates:
+Insecurities:
+Physical behaviour:
+Opinion: ]
+
+[Intimacy
+Genitalia:
+Sexual Archetypes / Kinks / Turn-ons:
+During Sex: ]
+
+[Dialogue/Speech
+Speech Style:
+Greeting: ""
+Surprised: ""
+Excited: ""
+Happy: ""
+Sad: ""
+Angry: ""
+When Warm Towards {user}: ""
+Stressed: ""
+Nostalgic: ""
+Opinion: ""
+Horny: ""
+When Having Sex: "" ]
+
+[Notes
+- Fun Facts:
+- Secrets (Only This Character Should
+  Know This, not anyone else):
+- Goals:
+- Mental Health:
+- Additional Information: ]
+
+</character_name_here>`;
+
+const RULES = `You are the drafting and formatting partner for a character-card production pipeline (primary target: JanitorAI; also SillyTavern). You draft; the author edits and the author's edit is always canonical. Draft detailed AI character profiles that strictly follow the TEMPLATE and RULES below.
+
+RULES (non-negotiable):
+1. Total profile including the NPC block stays under or around 1800 tokens (hard soft-ceiling 2150). The NPC block is the first thing to trim if over.
+2. No em dashes anywhere. Use commas, colons, semicolons, or periods.
+3. Output ONLY the character block: the <npcs> section followed by the character section. No markdown (no #, *, backticks, emojis) inside the block. No preamble, no code fences, no commentary.
+4. Follow the template structure and bracket formatting exactly: no removed sections, no altered brackets, all template labels preserved.
+5. Third-person narration. Plaintext narration and action. Asterisks only for internal thoughts. Quotation marks for dialogue. Contractions in dialogue and internal monologue.
+6. {user} is always a blank slate: never assign, describe, voice, or act for {user}. He/him pronouns. {char} appears only in the "When Warm Towards" label.
+7. Rename the <character_name_here> tag to the character's given name in lowercase with underscores (for example <blair_alcott>), and close it the same way.
+8. Fill every field with detailed but concise writing; personality lists meet reasonable minimum counts. Speech examples show voice but are not reused verbatim in play.
+9. NPC descriptions run 70-96 words each with a hook clause. Parents stay in Relationships, not the NPC block, unless asked.
+10. Keep residence architecture ambiguous (no doormen, no specific home types) to preserve player choice.`;
+
+const STYLE_SKILL = `PROSE STYLE (romantic-enchantment-style) for narrative-heavy sections (Backstory, Intimacy, Dialogue, and any scenario prose):
+Adopt a deeply immersive style of lush, romantic tension and rich worldbuilding. Use vivid, multi-sensory description (sight, sound, smell, taste, touch). Mix short punchy sentences for emotional peaks with longer flowing prose for atmosphere. Weave passion, desire, danger, and destiny with grounded emotional depth. Sophisticated yet accessible vocabulary with restrained poetic flourishes that clarify rather than obscure. Balance vulnerability and strength in the character's voice. Keep it consistent with the token ceiling; do not let style inflate length.`;
+
+const MEMORY_DEFAULT = `PROJECT MEMORY (continuity canon; the author's edited version is authoritative):
+
+Active shared universe: Trinity Brats, Trinity School (Upper East Side, Manhattan, 2026). Recurring NPCs:
+- Oliver "Ollie" Astor: openly bisexual platonic protector; calls people "darling" / "honey".
+- Hailey Vanderbilt: primary antagonist, secretly involved with Ethan.
+- Ethan van der Woodsen: cold, indifferent, entangled with Hailey.
+- Claude Pembroke: Hailey's enforcer, unaware of the affair.
+- Mia Watson: conflict-averse, chronically apologetic.
+Adjacent setting: Yale 2026. Hailey and Ollie there are 22-year-old Yale seniors with Trinity prep backgrounds.
+
+Key principles:
+- Cross-character continuity is a firm requirement; recurring NPC canon carries accurately into new builds.
+- Targets: ~1800-2150 tokens per card; ~700 per scenario message; ~850 for a climax scenario.
+- Fandom spoiler discipline: late-series reveals seeded as menace or buried in Secrets, not surfaced in main lore.
+- Parents stay in Relationships only unless specified.
+- NPC descriptions 70-96 words with a required hook clause; NPC block is the first trim candidate over ceiling.
+- Residence kept ambiguous (no doormen, no specific home types) to preserve player choice.`;
+
+const MODEL_LABEL = {
+  "claude-sonnet-5":"Sonnet 5","claude-haiku-4-5-20251001":"Haiku 4.5",
+  "claude-opus-4-8":"Opus 4.8","claude-fable-5":"Fable 5"
+};
+const TARGET_TOKENS = 1800, CEILING_TOKENS = 2150, GAUGE_MAX = 2150;
+
+/* ---------- state / persistence ---------- */
+const LS = {
+  settings:"ledger.settings.v1",
+  records:"ledger.records.v1",
+  current:"ledger.current.v1",
+  theme:"ledger.theme.v1"
+};
+const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } };
+const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
+
+let settings = Object.assign({
+  key:"", model:"claude-sonnet-5", memory:MEMORY_DEFAULT,
+  maxTokens:2600, cache:true, style:true
+}, load(LS.settings,{}));
+
+let avatarDataUrl = null;   // current portrait
+let currentId = null;       // id of the record being edited (if saved)
+
+/* ---------- environment: sandboxed preview vs standalone ---------- */
+const IN_ARTIFACT = (()=>{ try{ return window.self!==window.top; }catch(e){ return true; } })();
+if(IN_ARTIFACT) $("#previewBanner").classList.add("show");
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg,kind){
+  const t=document.createElement("div");
+  t.className="toast"+(kind?" "+kind:"");
+  t.textContent=msg;
+  $("#toaster").appendChild(t);
+  setTimeout(()=>{ t.style.opacity="0"; t.style.transition="opacity .3s"; setTimeout(()=>t.remove(),320); }, 2600);
+}
+
+/* =================================================================
+ * TOKEN GAUGE
+ * ================================================================= */
+function estTokens(text){ text=(text||"").trim(); if(!text) return 0; return Math.round(text.length/4); }
+function updateGauge(){
+  const txt = $("#fProfile").value;
+  const tok = estTokens(txt);
+  const words = txt.trim()? txt.trim().split(/\s+/).length : 0;
+  $("#tokCount").textContent = tok.toLocaleString();
+  $("#wordCount").textContent = words.toLocaleString()+" words";
+  $("#profChars").textContent = txt.length.toLocaleString()+" chars";
+  const g=$("#gauge"), fill=$("#gaugeFill"), st=$("#gaugeStatus");
+  fill.style.width = Math.min(100,(tok/GAUGE_MAX)*100)+"%";
+  g.classList.remove("ok","warn","over");
+  if(tok===0){ g.classList.add("ok"); st.textContent="Empty"; }
+  else if(tok<=TARGET_TOKENS){ g.classList.add("ok"); st.textContent="On target"; }
+  else if(tok<=CEILING_TOKENS){ g.classList.add("warn"); st.textContent="Near ceiling"; }
+  else { g.classList.add("over"); st.textContent="Over — trim"; }
+  const preview = txt || "";
+  $("#proofText").innerHTML = preview ? "" : '<span class="muted">Nothing entered yet.</span>';
+  if(preview) $("#proofText").textContent = preview;
+}
+
+/* =================================================================
+ * CLAUDE API  (direct browser access + prompt caching)
+ * ================================================================= */
+function buildSystem(){
+  const blocks=[];
+  const staticText = RULES + "\n\nTEMPLATE (preserve structure and brackets exactly):\n\n" + TEMPLATE;
+  blocks.push(settings.cache ? {type:"text",text:staticText,cache_control:{type:"ephemeral"}} : {type:"text",text:staticText});
+  const mem=(settings.memory||"").trim();
+  if(mem) blocks.push(settings.cache ? {type:"text",text:mem,cache_control:{type:"ephemeral"}} : {type:"text",text:mem});
+  if($("#fStyle").checked) blocks.push({type:"text",text:STYLE_SKILL});
+  return blocks;
+}
+function userMessage(mode){
+  const name=$("#fName").value.trim();
+  const brief=$("#fBrief").value.trim();
+  if(mode==="refine"){
+    const instr=$("#fRefine").value.trim();
+    return "Here is the current character block. Apply this revision, then reprint the FULL block only (no commentary):\n\nREVISION: "+instr+
+      "\n\nCURRENT BLOCK:\n"+$("#fProfile").value;
+  }
+  let m="Draft a complete character profile following the template exactly. Output only the block.";
+  if(name) m+="\n\nCharacter name: "+name;
+  if(brief) m+="\n\nBrief: "+brief;
+  m+="\n\nRemember: no em dashes, no markdown, {user} is a blank slate (he/him), rename the character tag to the given name in lowercase_with_underscores, keep the whole thing near or under "+TARGET_TOKENS+" tokens.";
+  return m;
+}
+async function callClaude(mode){
+  if(IN_ARTIFACT){ toast("Drafting needs the hosted/local app with your key.","err"); openModal("settingsScrim"); return; }
+  if(!settings.key){ toast("Add your Anthropic API key in Settings first.","err"); openModal("settingsScrim"); return; }
+  if(mode==="draft" && !$("#fBrief").value.trim() && !$("#fName").value.trim()){ toast("Add a name or brief to draft from.","err"); return; }
+  if(mode==="refine" && !$("#fRefine").value.trim()){ toast("Type the revision you want.","err"); return; }
+  if(mode==="refine" && !$("#fProfile").value.trim()){ toast("Nothing to refine yet.","err"); return; }
+
+  setBusy(true, mode);
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "content-type":"application/json",
+        "x-api-key":settings.key,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body:JSON.stringify({
+        model:settings.model,
+        max_tokens:Math.max(256,Math.min(8192,settings.maxTokens|0||2600)),
+        system:buildSystem(),
+        messages:[{role:"user",content:userMessage(mode)}]
+      })
+    });
+    const data = await res.json();
+    if(!res.ok){ throw new Error((data && data.error && data.error.message) || ("HTTP "+res.status)); }
+    let out=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
+    out = stripFences(out);
+    $("#fProfile").value = out;
+    if(!$("#fName").value.trim()) $("#fName").value = guessName(out);
+    updateGauge(); persistCurrent();
+    if(mode==="refine") $("#fRefine").value="";
+    showUsage(data.usage, data.model||settings.model);
+    toast("Draft ready. Your edits are canonical.","ok");
+  }catch(err){
+    toast("Claude: "+err.message,"err");
+  }finally{ setBusy(false, mode); }
+}
+function stripFences(t){
+  t=t.trim();
+  if(t.startsWith("```")){ t=t.replace(/^```[a-zA-Z]*\s*\n?/,"").replace(/\n?```\s*$/,""); }
+  return t.trim();
+}
+function guessName(block){
+  const m=block.match(/<([a-z0-9_]+)>\s*\n\s*\[Basic Information/i) || block.match(/<([a-z0-9_]+)>/);
+  if(m && m[1] && m[1]!=="npcs" && m[1]!=="character_name_here"){
+    return m[1].split("_").map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+  }
+  return "";
+}
+function showUsage(u,model){
+  if(!u) return;
+  const el=$("#usage"); el.classList.add("show");
+  const cr=u.cache_read_input_tokens||0, cc=u.cache_creation_input_tokens||0;
+  el.textContent = `${MODEL_LABEL[model]||model} · in ${(u.input_tokens||0)+cr+cc} (cached ${cr} read${cc?`, ${cc} written`:""}) · out ${u.output_tokens||0}`;
+}
+function setBusy(b,mode){
+  const gen=$("#btnGenerate"), ref=$("#btnRefine");
+  gen.disabled=b; ref.disabled=b;
+  if(mode==="refine"){ ref.innerHTML=b?'<span class="spin"></span>Refining':'Refine'; }
+  else{ $("#genLabel").textContent=b?"Drafting":"Draft with Claude"; $("#genIcon").outerHTML=b?'<span class="spin" id="genIcon"></span>':'<span class="ic" id="genIcon">✒</span>'; }
+}
+
+/* =================================================================
+ * PNG  — read/write SillyTavern character card v2 (tEXt "chara")
+ * ================================================================= */
+const CRC_TABLE=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return t;})();
+function crc32(bytes){let c=0xFFFFFFFF;for(let i=0;i<bytes.length;i++)c=CRC_TABLE[(c^bytes[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function latin1(bytes,a,b){let s="";for(let i=a;i<b;i++)s+=String.fromCharCode(bytes[i]);return s;}
+function b64ToUtf8(b64){const bin=atob(b64.replace(/\s+/g,""));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u);}
+function utf8ToB64(str){const u=new TextEncoder().encode(str);let bin="";for(let i=0;i<u.length;i++)bin+=String.fromCharCode(u[i]);return btoa(bin);}
+
+function parseChunks(bytes){
+  const sig=[137,80,78,71,13,10,26,10];
+  for(let i=0;i<8;i++) if(bytes[i]!==sig[i]) throw new Error("That is not a PNG file.");
+  const dv=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  let off=8; const chunks=[];
+  while(off+8<=bytes.length){
+    const len=dv.getUint32(off);
+    const type=latin1(bytes,off+4,off+8);
+    const full=bytes.slice(off,off+12+len);
+    let keyword=null,text=null;
+    if(type==="tEXt"){
+      let z=off+8; const end=off+8+len;
+      while(z<end && bytes[z]!==0) z++;
+      keyword=latin1(bytes,off+8,z);
+      text=latin1(bytes,z+1,end);
+    }
+    chunks.push({type,keyword,text,full});
+    off+=12+len;
+    if(type==="IEND") break;
+  }
+  return chunks;
+}
+function readCardFromPng(bytes){
+  const chunks=parseChunks(bytes);
+  const map={};
+  chunks.forEach(c=>{ if(c.type==="tEXt" && c.keyword) map[c.keyword.toLowerCase()]=c.text; });
+  const raw = map["ccv3"] || map["chara"];
+  if(!raw) throw new Error("No character data found in this PNG.");
+  return JSON.parse(b64ToUtf8(raw));
+}
+function makeTextChunk(keyword,text){
+  const kw=new TextEncoder().encode(keyword);
+  const txt=new Uint8Array(text.length);
+  for(let i=0;i<text.length;i++) txt[i]=text.charCodeAt(i)&0xFF;
+  const data=new Uint8Array(kw.length+1+txt.length);
+  data.set(kw,0); data[kw.length]=0; data.set(txt,kw.length+1);
+  const typeBytes=new TextEncoder().encode("tEXt");
+  const chunk=new Uint8Array(12+data.length);
+  const dv=new DataView(chunk.buffer);
+  dv.setUint32(0,data.length);
+  chunk.set(typeBytes,4); chunk.set(data,8);
+  const crcInput=new Uint8Array(4+data.length);
+  crcInput.set(typeBytes,0); crcInput.set(data,4);
+  dv.setUint32(8+data.length,crc32(crcInput));
+  return chunk;
+}
+function embedCardInPng(srcBytes,jsonStr){
+  const b64=utf8ToB64(jsonStr);
+  const chunks=parseChunks(srcBytes).filter(c=>!(c.type==="tEXt" && c.keyword && ["chara","ccv3"].includes(c.keyword.toLowerCase())));
+  const textChunk=makeTextChunk("chara",b64);
+  const sig=new Uint8Array([137,80,78,71,13,10,26,10]);
+  const parts=[sig];
+  for(const c of chunks){ if(c.type==="IEND") parts.push(textChunk); parts.push(c.full); }
+  const total=parts.reduce((a,p)=>a+p.length,0);
+  const out=new Uint8Array(total); let o=0;
+  for(const p of parts){ out.set(p,o); o+=p.length; }
+  return out;
+}
+
+/* render a portrait to PNG bytes; uses uploaded avatar or a drawn placeholder */
+function portraitToPngBytes(){
+  return new Promise((resolve)=>{
+    const W=400,H=600,cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+    const ctx=cv.getContext("2d");
+    const finish=()=>cv.toBlob(b=>b.arrayBuffer().then(ab=>resolve(new Uint8Array(ab))),"image/png");
+    if(avatarDataUrl){
+      const img=new Image();
+      img.onload=()=>{ // cover
+        const r=Math.max(W/img.width,H/img.height), w=img.width*r, h=img.height*r;
+        ctx.drawImage(img,(W-w)/2,(H-h)/2,w,h); finish();
+      };
+      img.onerror=()=>{ drawPlaceholder(ctx,W,H); finish(); };
+      img.src=avatarDataUrl;
+    }else{ drawPlaceholder(ctx,W,H); finish(); }
+  });
+}
+function drawPlaceholder(ctx,W,H){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#2a1113"); g.addColorStop(1,"#14110d");
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="#c6a15f"; ctx.lineWidth=2; ctx.strokeRect(16,16,W-32,H-32);
+  ctx.lineWidth=1; ctx.strokeRect(24,24,W-48,H-48);
+  const name=($("#fName").value.trim()||"The Ledger");
+  const initials=name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+  ctx.fillStyle="#c6a15f"; ctx.textAlign="center";
+  ctx.font="600 120px Georgia, serif"; ctx.fillText(initials,W/2,H/2+10);
+  ctx.font="600 22px Georgia, serif"; ctx.fillStyle="#ece2ce";
+  ctx.fillText(name.slice(0,26),W/2,H-70);
+  ctx.font="italic 14px Georgia, serif"; ctx.fillStyle="#877c64";
+  ctx.fillText("The Ledger",W/2,H-46);
+}
+
+/* =================================================================
+ * CARDS — SillyTavern v2 <-> the working entry
+ * ================================================================= */
+function currentEntry(){
+  return {
+    id: currentId,
+    name: $("#fName").value.trim(),
+    brief: $("#fBrief").value,
+    avatar: avatarDataUrl,
+    profile: $("#fProfile").value,
+    scenario: $("#fScenario").value,
+    first: $("#fFirst").value,
+    alts: $("#fAlts").value,
+    examples: $("#fExamples").value,
+    system: $("#fSystem").value,
+    tags: $("#fTags").value,
+    version: $("#fVersion").value,
+    creator: $("#fCreator").value,
+    notes: $("#fNotes").value,
+    updatedAt: Date.now()
+  };
+}
+function entryToV2(e){
+  const alts = e.alts.split(/^\s*---\s*$/m).map(s=>s.trim()).filter(Boolean);
+  const data={
+    name:e.name||"Unnamed",
+    description:e.profile||"",
+    personality:"",
+    scenario:e.scenario||"",
+    first_mes:e.first||"",
+    mes_example:e.examples||"",
+    creator_notes:e.notes||"",
+    system_prompt:e.system||"",
+    post_history_instructions:"",
+    alternate_greetings:alts,
+    tags:e.tags.split(",").map(s=>s.trim()).filter(Boolean),
+    creator:e.creator||"",
+    character_version:e.version||"",
+    extensions:{}
+  };
+  return {spec:"chara_card_v2",spec_version:"2.0",data,
+    // legacy mirror for maximum compatibility
+    name:data.name,description:data.description,personality:data.personality,
+    scenario:data.scenario,first_mes:data.first_mes,mes_example:data.mes_example};
+}
+function v2ToEntry(card){
+  const d = (card && card.data) ? card.data : (card||{});
+  return {
+    name:d.name||card.name||"",
+    profile:d.description||card.description||"",
+    scenario:d.scenario||card.scenario||"",
+    first:d.first_mes||card.first_mes||"",
+    alts:Array.isArray(d.alternate_greetings)?d.alternate_greetings.join("\n---\n"):"",
+    examples:d.mes_example||card.mes_example||"",
+    system:d.system_prompt||"",
+    tags:Array.isArray(d.tags)?d.tags.join(", "):"",
+    version:d.character_version||"",
+    creator:d.creator||"",
+    notes:d.creator_notes||""
+  };
+}
+function applyEntry(e){
+  $("#fName").value=e.name||"";
+  $("#fBrief").value=e.brief||"";
+  $("#fProfile").value=e.profile||"";
+  $("#fScenario").value=e.scenario||"";
+  $("#fFirst").value=e.first||"";
+  $("#fAlts").value=e.alts||"";
+  $("#fExamples").value=e.examples||"";
+  $("#fSystem").value=e.system||"";
+  $("#fTags").value=e.tags||"";
+  $("#fVersion").value=e.version||"";
+  $("#fCreator").value=e.creator||"";
+  $("#fNotes").value=e.notes||"";
+  setAvatar(e.avatar||null);
+  if(e.scenario||e.first||e.alts) $("#foldScenario").open=true;
+  if(e.examples||e.system||e.tags||e.version||e.creator||e.notes) $("#foldMeta").open=true;
+  updateGauge();
+}
+
+/* =================================================================
+ * IMPORT / EXPORT
+ * ================================================================= */
+function download(filename, blob){
+  if(window.claude && window.claude.downloads && typeof window.claude.downloads.save==="function"){
+    window.claude.downloads.save({filename,data:blob}).then(()=>toast("Saved.","ok"))
+      .catch(err=>{ if(err && err.code==="declined") return; blobDownload(filename,blob); });
+    return;
+  }
+  blobDownload(filename,blob);
+}
+function blobDownload(filename,blob){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function slug(name){ return (name||"character").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")||"character"; }
+
+function exportJson(){
+  const e=currentEntry();
+  if(!e.profile.trim()){ toast("Nothing to export yet.","err"); return; }
+  const card=entryToV2(e);
+  download(slug(e.name)+".json", new Blob([JSON.stringify(card,null,2)],{type:"application/json"}));
+}
+async function exportPng(){
+  const e=currentEntry();
+  if(!e.profile.trim()){ toast("Nothing to export yet.","err"); return; }
+  try{
+    const src=await portraitToPngBytes();
+    const png=embedCardInPng(src, JSON.stringify(entryToV2(e)));
+    download(slug(e.name)+".png", new Blob([png],{type:"image/png"}));
+    toast("Card exported with embedded data.","ok");
+  }catch(err){ toast("PNG export failed: "+err.message,"err"); }
+}
+async function importFile(file){
+  const name=(file.name||"").toLowerCase();
+  try{
+    if(name.endsWith(".json") || file.type==="application/json"){
+      const text=await file.text();
+      const card=JSON.parse(text);
+      loadImported(v2ToEntry(card), null);
+    }else{
+      const buf=new Uint8Array(await file.arrayBuffer());
+      const card=readCardFromPng(buf);
+      const dataUrl=await blobToDataUrl(new Blob([buf],{type:"image/png"}));
+      loadImported(v2ToEntry(card), dataUrl);
+    }
+    toast("Card imported.","ok");
+  }catch(err){ toast("Import failed: "+err.message,"err"); }
+}
+function loadImported(entry, avatar){
+  currentId=null;
+  entry.avatar = avatar;
+  applyEntry(entry);
+  persistCurrent();
+  closeModal("libraryScrim");
+}
+function blobToDataUrl(blob){ return new Promise((res,rej)=>{const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(blob);}); }
+
+/* =================================================================
+ * LIBRARY
+ * ================================================================= */
+function getRecords(){ return load(LS.records,[]); }
+function setRecords(r){ save(LS.records,r); }
+function saveEntry(){
+  const e=currentEntry();
+  if(!e.profile.trim() && !e.name.trim()){ toast("Nothing to save yet.","err"); return; }
+  const records=getRecords();
+  if(!e.id){ e.id="c_"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); currentId=e.id; }
+  const idx=records.findIndex(r=>r.id===e.id);
+  if(idx>=0) records[idx]=e; else records.unshift(e);
+  setRecords(records); persistCurrent();
+  toast(idx>=0?"Entry updated.":"Saved to the Library.","ok");
+}
+function renderLibrary(){
+  const records=getRecords();
+  $("#libCount").textContent = records.length? records.length+(records.length===1?" entry":" entries") : "";
+  const body=$("#libBody");
+  if(!records.length){ body.innerHTML='<div class="lib-empty">The shelves are empty.<br>Draft or import a character, then Save entry.</div>'; return; }
+  body.innerHTML='<div class="lib-grid"></div>';
+  const grid=$(".lib-grid",body);
+  records.forEach(r=>{
+    const card=document.createElement("div"); card.className="lib-card";
+    const initials=(r.name||"?").split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+    const dt=new Date(r.updatedAt||Date.now()).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+    card.innerHTML=`
+      <div class="lib-thumb">${r.avatar?`<img alt="" src="${r.avatar}">`:`<span class="mono-ph">${initials}</span>`}</div>
+      <div class="lib-meta"><div class="nm">${escapeHtml(r.name||"Unnamed")}</div><div class="dt">${dt} · ~${estTokens(r.profile)} tok</div></div>
+      <div class="lib-actions">
+        <button class="btn small" data-act="open">Open</button>
+        <button class="btn small ghost danger" data-act="del">Delete</button>
+      </div>`;
+    $('[data-act="open"]',card).addEventListener("click",e=>{e.stopPropagation(); openRecord(r.id);});
+    $('[data-act="del"]',card).addEventListener("click",e=>{e.stopPropagation(); delRecord(r.id);});
+    card.addEventListener("click",()=>openRecord(r.id));
+    grid.appendChild(card);
+  });
+}
+function openRecord(id){
+  const r=getRecords().find(x=>x.id===id); if(!r) return;
+  currentId=r.id; applyEntry(r); persistCurrent();
+  closeModal("libraryScrim"); toast("Loaded “"+(r.name||"Unnamed")+"”.","ok");
+}
+function delRecord(id){
+  const r=getRecords().find(x=>x.id===id);
+  if(!confirm("Delete “"+(r?r.name||"Unnamed":"this entry")+"” from the Library?")) return;
+  setRecords(getRecords().filter(x=>x.id!==id));
+  if(currentId===id) currentId=null;
+  renderLibrary(); toast("Deleted.");
+}
+function escapeHtml(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* =================================================================
+ * UI GLUE
+ * ================================================================= */
+function persistCurrent(){ save(LS.current, currentEntry()); }
+function setAvatar(dataUrl){
+  avatarDataUrl=dataUrl;
+  const drop=$("#avatarDrop"), ph=$("#avatarPlaceholder");
+  $$("#avatarDrop img").forEach(i=>i.remove());
+  if(dataUrl){
+    const img=document.createElement("img"); img.alt="portrait"; img.src=dataUrl;
+    drop.appendChild(img); drop.classList.add("has-img"); ph.style.display="none";
+  }else{ drop.classList.remove("has-img"); ph.style.display=""; }
+}
+function openModal(id){ $("#"+id).classList.add("open"); }
+function closeModal(id){ $("#"+id).classList.remove("open"); }
+
+function openSettings(){
+  $("#setKey").value=settings.key||"";
+  $("#setMemory").value=settings.memory||MEMORY_DEFAULT;
+  $("#setMaxTokens").value=settings.maxTokens||2600;
+  $("#setCache").checked=!!settings.cache;
+  openModal("settingsScrim");
+}
+function saveSettings(){
+  settings.key=$("#setKey").value.trim();
+  settings.memory=$("#setMemory").value;
+  settings.maxTokens=parseInt($("#setMaxTokens").value,10)||2600;
+  settings.cache=$("#setCache").checked;
+  settings.model=$("#fModel").value;
+  settings.style=$("#fStyle").checked;
+  save(LS.settings,settings);
+  closeModal("settingsScrim"); toast("Settings saved.","ok");
+}
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  save(LS.theme,t);
+  $("#btnTheme").textContent = t==="dark" ? "☾" : "☀";
+  $("#btnTheme").title = t==="dark" ? "Switch to day (parchment)" : "Switch to reading room (dark)";
+}
+
+/* drag & drop (whole window) */
+let dragDepth=0;
+function isFileDrag(e){ return e.dataTransfer && [...(e.dataTransfer.types||[])].includes("Files"); }
+window.addEventListener("dragenter",e=>{ if(!isFileDrag(e))return; e.preventDefault(); dragDepth++; $("#dropOverlay").classList.add("show"); });
+window.addEventListener("dragover",e=>{ if(isFileDrag(e)) e.preventDefault(); });
+window.addEventListener("dragleave",e=>{ if(!isFileDrag(e))return; dragDepth=Math.max(0,dragDepth-1); if(dragDepth===0)$("#dropOverlay").classList.remove("show"); });
+window.addEventListener("drop",e=>{
+  if(!isFileDrag(e))return; e.preventDefault(); dragDepth=0; $("#dropOverlay").classList.remove("show");
+  const f=e.dataTransfer.files[0]; if(f) importFile(f);
+});
+
+/* boot */
+function boot(){
+  // theme — dark "reading room" is the signature default; day parchment is one click away
+  setTheme(load(LS.theme,null) || "dark");
+
+  // restore controls
+  $("#fModel").value=settings.model; $("#fStyle").checked=!!settings.style;
+
+  // restore working entry
+  const cur=load(LS.current,null);
+  if(cur){ currentId=cur.id||null; applyEntry(cur); }
+  else updateGauge();
+
+  // wire inputs
+  ["fName","fBrief","fProfile","fScenario","fFirst","fAlts","fExamples","fSystem","fTags","fVersion","fCreator","fNotes"]
+    .forEach(id=>$("#"+id).addEventListener("input",()=>{ if(id==="fProfile") updateGauge(); persistCurrent(); }));
+  $("#fModel").addEventListener("change",()=>{ settings.model=$("#fModel").value; save(LS.settings,settings); });
+  $("#fStyle").addEventListener("change",()=>{ settings.style=$("#fStyle").checked; save(LS.settings,settings); });
+
+  // masthead
+  $("#btnNew").addEventListener("click",()=>{
+    if($("#fProfile").value.trim() && !confirm("Start a new blank entry? Save first if you want to keep this one.")) return;
+    currentId=null; applyEntry({}); avatarDataUrl=null; setAvatar(null); persistCurrent(); toast("Fresh entry.");
+  });
+  $("#btnTemplate").addEventListener("click",()=>{
+    if($("#fProfile").value.trim() && !confirm("Replace the editor with the blank template?")) return;
+    $("#fProfile").value=TEMPLATE; updateGauge(); persistCurrent();
+  });
+  $("#btnImport").addEventListener("click",()=>$("#fileImport").click());
+  $("#btnLibImport").addEventListener("click",()=>$("#fileImport").click());
+  $("#btnLibrary").addEventListener("click",()=>{ renderLibrary(); openModal("libraryScrim"); });
+  $("#btnSettings").addEventListener("click",openSettings);
+  $("#btnTheme").addEventListener("click",()=>setTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
+
+  // generate / refine
+  $("#btnGenerate").addEventListener("click",()=>callClaude("draft"));
+  $("#btnRefine").addEventListener("click",()=>callClaude("refine"));
+  $("#fRefine").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); callClaude("refine"); }});
+
+  // proof actions
+  $("#btnCopy").addEventListener("click",()=>{
+    const t=$("#fProfile").value; if(!t.trim()){ toast("Nothing to copy.","err"); return; }
+    navigator.clipboard.writeText(t).then(()=>toast("Copied the block.","ok"),()=>toast("Copy blocked by browser.","err"));
+  });
+  $("#btnSave").addEventListener("click",saveEntry);
+  $("#btnExportJson").addEventListener("click",exportJson);
+  $("#btnExportPng").addEventListener("click",exportPng);
+
+  // settings modal
+  $("#btnSaveSettings").addEventListener("click",saveSettings);
+  $("#btnClearKey").addEventListener("click",()=>{ settings.key=""; $("#setKey").value=""; save(LS.settings,settings); toast("API key forgotten."); });
+  $("#btnResetMemory").addEventListener("click",()=>{ $("#setMemory").value=MEMORY_DEFAULT; toast("Memory reset (save to keep)."); });
+
+  // avatar
+  $("#avatarDrop").addEventListener("click",e=>{ if(e.target.closest(".clear"))return; $("#fileAvatar").click(); });
+  $("#avatarClear").addEventListener("click",e=>{ e.stopPropagation(); setAvatar(null); persistCurrent(); });
+  $("#fileAvatar").addEventListener("change",async e=>{ const f=e.target.files[0]; if(f){ setAvatar(await blobToDataUrl(f)); persistCurrent(); } e.target.value=""; });
+  ["dragover","dragenter"].forEach(ev=>$("#avatarDrop").addEventListener(ev,e=>{ if(isFileDrag(e)){ e.preventDefault(); e.stopPropagation(); $("#avatarDrop").classList.add("over"); }}));
+  ["dragleave","drop"].forEach(ev=>$("#avatarDrop").addEventListener(ev,e=>$("#avatarDrop").classList.remove("over")));
+  $("#avatarDrop").addEventListener("drop",async e=>{
+    if(!isFileDrag(e))return; e.preventDefault(); e.stopPropagation(); dragDepth=0; $("#dropOverlay").classList.remove("show");
+    const f=e.dataTransfer.files[0];
+    if(f && f.type.startsWith("image/") && !/\.(png)$/i.test(f.name)){ setAvatar(await blobToDataUrl(f)); persistCurrent(); }
+    else if(f){ importFile(f); }   // a PNG could be a card; treat as import
+  });
+
+  // shared import input
+  $("#fileImport").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) importFile(f); e.target.value=""; });
+
+  // modal close
+  $$("[data-close]").forEach(b=>b.addEventListener("click",()=>closeModal(b.dataset.close)));
+  $$(".scrim").forEach(s=>s.addEventListener("click",e=>{ if(e.target===s) closeModal(s.id); }));
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape") $$(".scrim.open").forEach(s=>s.classList.remove("open")); });
+}
+document.addEventListener("DOMContentLoaded",boot);
+})();
+</script>
+</body>
+</html>
