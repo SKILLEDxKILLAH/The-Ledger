@@ -65,10 +65,12 @@ The whole point is to spend fewer tokens than working in a chat window:
 
 ## Deploy to GitHub Pages
 
-A workflow is included at `.github/workflows/pages.yml`. **One-time setup:**
-Settings → Pages → Build and deployment → **Source: GitHub Actions**. After
-that, every push to `main` redeploys automatically, and you can trigger a build
-by hand from the Actions tab (Run workflow).
+A workflow is included at `.github/workflows/pages.yml`. It **auto-enables
+Pages** on its first run (via `configure-pages` `enablement: true`), so there's
+usually nothing to toggle. Every push to `main` redeploys automatically, and you
+can trigger a build by hand from the Actions tab (Run workflow). If your account
+or org blocks auto-enable, set it once under Settings → Pages → Build and
+deployment → **Source: GitHub Actions**.
 
 Your app is served at `https://<user>.github.io/The-Ledger/`. The API key still
 lives only in the visitor's browser.
