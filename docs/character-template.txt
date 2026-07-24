@@ -1,0 +1,130 @@
+Character Builder Instructions and Template
+===========================================
+
+Purpose: create detailed AI character profiles formatted for janitorai.com,
+strictly following the template below. Every field is thoughtfully completed
+(physical description, personality traits, speech style, likes, dislikes, kinks,
+detailed backstory) so the character is consistent, believable, and usable for
+roleplay.
+
+Important Rules
+---------------
+1. Total profile (including NPCs) under or around 1800 tokens. This is important.
+2. No em dashes anywhere; replace with commas, colons, semicolons, or periods.
+3. Only the character profile and NPC section appear inside a code block.
+4. Strictly follow the template structure and formatting: no removed sections,
+   no altered bracket formatting, no markdown styling (pound signs, asterisks,
+   emojis) inside the template.
+5. All template text is plain text; bracket formatting remains exactly as shown.
+6. NPCs go in the <npcs> section as brief but detailed descriptions in the
+   required format.
+7. All fields fully filled with detailed but concise writing; personality
+   sections contain many traits and lists meet minimum counts.
+8. Speech examples show how the character talks but are not reused verbatim
+   during roleplay.
+
+
+Template (structure and bracket formatting preserved)
+-----------------------------------------------------
+
+<npcs> [
+- Name: A brief yet detailed 96 word
+  description of any mentioned NPC or
+  side characters, formatted as so:
+  "Name: Gender/sex, age, hair color,
+  eye color, physical traits,
+  personality traits, occupation/role"
+]
+</npcs>
+
+<character_name_here>
+
+[Basic Information
+Given Name:
+Family Name:
+Full Name: (If Asian, family name
+  first, then given/first name)
+Aliases:
+Species: (optional)
+Nationality: (optional)
+Ethnicity: (optional)
+Age:
+Sexuality:
+Occupation/Role: (optional)
+
+Appearance
+- Height:
+- Weight:
+- Complexion/Skin Color:
+- Natural Marks:
+- Eyes:
+- Hair Texture:
+- Hair Color:
+- Hairstyle:
+- Breasts: (If female)
+- Ass:
+
+Scent:
+
+Clothing
+- Brands:
+- At Work/School:
+- Casual:
+- At Parties: ]
+
+[Backstory:
+(General description, brief but
+comprehensive. Around 4-5 paragraphs.) ]
+
+[Current Residence:
+(Location name + brief description) ]
+
+[Relationships
+- {user}: relationship description.
+  "In-character dialogue showing
+  opinion about user here."
+- npc_name: relationship description.
+  "In-character dialogue showing
+  opinion about npc_name here."
+  (repeat for four NPCs) ]
+
+[Personality
+Archetypes:
+Traits:
+Likes:
+Loves:
+Dislikes:
+Hates:
+Insecurities:
+Physical behaviour:
+Opinion: ]
+
+[Intimacy
+Genitalia:
+Sexual Archetypes / Kinks / Turn-ons:
+During Sex: ]
+
+[Dialogue/Speech
+Speech Style:
+Greeting: ""
+Surprised: ""
+Excited: ""
+Happy: ""
+Sad: ""
+Angry: ""
+When Warm Towards {user}: ""
+Stressed: ""
+Nostalgic: ""
+Opinion: ""
+Horny: ""
+When Having Sex: "" ]
+
+[Notes
+- Fun Facts:
+- Secrets (Only This Character Should
+  Know This, not anyone else):
+- Goals:
+- Mental Health:
+- Additional Information: ]
+
+</character_name_here>
