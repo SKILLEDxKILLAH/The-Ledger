@@ -7,9 +7,12 @@ protect.
 ## What this is
 
 `The Ledger` — a single-file, dependency-free web app for building JanitorAI /
-SillyTavern character cards with the user's own Claude API key. Everything is in
-`index.html` (HTML + CSS + JS inline). There is **no build step and no package
-manager**. Do not add a framework, a bundler, or npm dependencies unless asked.
+SillyTavern character cards with the user's own LLM API key. Providers live in
+the `PROVIDERS` registry (Claude, ChatGPT, Gemini, DeepSeek, GLM, Grok, Kimi),
+each with a `format` of `anthropic` | `openai` | `gemini`; `buildRequest` /
+`parseResponse` branch on it. Everything is in `index.html` (HTML + CSS + JS
+inline). There is **no build step and no package manager**. Do not add a
+framework, a bundler, or npm dependencies unless asked.
 
 ## Where things live
 

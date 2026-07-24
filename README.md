@@ -16,14 +16,15 @@ your key and your characters live in your browser.
 
 ## Features
 
-- **Draft with Claude** — one brief becomes a full profile that strictly follows
-  the JanitorAI template and rules (no em dashes, no markdown inside the block,
-  `{user}` kept a blank slate, character tag renamed automatically).
+- **Draft with your model of choice** — one brief becomes a full profile that
+  strictly follows the JanitorAI template and rules (no em dashes, no markdown
+  inside the block, `{user}` kept a blank slate, character tag renamed
+  automatically). Pick from seven providers (see below), each with its own key.
 - **Token gauge** — live estimate against the ~1,800 target and 2,150 soft
   ceiling, so you catch an over-length card before you spend a request.
-- **Project Memory** — your Trinity / Yale continuity canon is sent to Claude as
-  a *cached* context block, so recurring NPCs carry into every build. Fully
-  editable in Settings.
+- **Project Memory** — your Trinity / Yale continuity canon is sent to the model
+  as a context block (cached on Claude), so recurring NPCs carry into every
+  build. Fully editable in Settings.
 - **Romantic Enchantment style** — the imported `romantic-enchantment-style`
   skill is injected into narrative-heavy sections at the flip of a toggle.
 - **Refine** — send only the current draft plus a one-line instruction (cheap,
@@ -39,29 +40,48 @@ your key and your characters live in your browser.
 
 1. **Open the app.** Either double-click `index.html` (it runs from `file://`)
    or serve the folder (see *Deploy* below).
-2. **Add your key.** Settings → paste your Anthropic API key. Get one at
-   [console.anthropic.com](https://console.anthropic.com). It is stored only in
-   this browser and sent directly to `api.anthropic.com`.
-3. **Write a brief**, pick a model, and press **Draft with Claude**.
+2. **Pick a provider and add its key.** Settings → choose a provider → paste the
+   key. Each provider stores its own key, only in this browser; the key is sent
+   directly to that provider and nowhere else.
+3. **Write a brief**, choose a model, and press **Draft**.
 4. **Edit** the profile (your edits are canonical), then **Copy block**,
    **Export JSON/PNG**, or **Save entry**.
 
-> The API call uses Anthropic's `anthropic-dangerous-direct-browser-access`
-> header so the browser can talk to the API without a backend. This is the
-> intended, supported way to run a personal browser tool with your own key.
+## Providers
+
+Choose any of these in Settings; the model box suggests common ids per provider
+and accepts any current model id you type.
+
+| Provider | Get a key | Browser calls |
+| --- | --- | --- |
+| **Claude** (Anthropic) | console.anthropic.com | direct ✓ |
+| **ChatGPT** (OpenAI) | platform.openai.com/api-keys | direct ✓ |
+| **Gemini** (Google) | aistudio.google.com/apikey | direct ✓ |
+| **DeepSeek** | platform.deepseek.com | may need a proxy |
+| **GLM** (Zhipu / Z.ai) | z.ai · open.bigmodel.cn | may need a proxy |
+| **Grok** (xAI) | console.x.ai | may need a proxy |
+| **Kimi** (Moonshot) | platform.moonshot.ai | may need a proxy |
+
+Claude, ChatGPT, and Gemini return the CORS headers a browser needs, so they
+work with no backend (Claude via the `anthropic-dangerous-direct-browser-access`
+header). The others may block direct browser calls; if a request cannot reach
+the provider, set a **custom endpoint** (Settings → Advanced) pointing at your
+own HTTPS/CORS proxy. Nothing is proxied through any server you do not choose.
 
 ## Efficiency by design
 
 The whole point is to spend fewer tokens than working in a chat window:
 
 - **Prompt caching** on the static prefix (rules + template + Project Memory).
-  After the first call, that large context is re-read from cache at a fraction
-  of the cost. Toggle in Settings.
+  On Claude this uses explicit `cache_control`; the OpenAI-compatible providers
+  cache the identical prefix automatically. Either way the big context is re-read
+  cheaply after the first call. Toggle in Settings.
 - **Stateless generation** — each draft is a single self-contained request. No
   conversation history accumulates, so context stays small every time.
-- **Model tiers** — Haiku 4.5 for fast/cheap drafts, Sonnet 5 for balance,
-  Opus 4.8 / Fable 5 for the richest prose.
-- **Usage readout** after every call (input, cached, output tokens).
+- **Model tiers** — every provider exposes cheap-and-fast through top-tier
+  models; start cheap for drafts and escalate only when the prose needs it.
+- **Usage readout** after every call (input, cached, output tokens), normalized
+  across providers.
 
 ## Deploy to GitHub Pages
 
