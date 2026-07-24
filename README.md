@@ -65,9 +65,16 @@ The whole point is to spend fewer tokens than working in a chat window:
 
 ## Deploy to GitHub Pages
 
-Settings → Pages → Deploy from branch → pick your branch and `/ (root)`.
+A workflow is included at `.github/workflows/pages.yml`. **One-time setup:**
+Settings → Pages → Build and deployment → **Source: GitHub Actions**. After
+that, every push to `main` redeploys automatically, and you can trigger a build
+by hand from the Actions tab (Run workflow).
+
 Your app is served at `https://<user>.github.io/The-Ledger/`. The API key still
 lives only in the visitor's browser.
+
+(Prefer no Actions? Settings → Pages → Deploy from branch → pick a branch and
+`/ (root)` works too, since the whole app is a static `index.html`.)
 
 ## Project structure
 
