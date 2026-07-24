@@ -302,7 +302,7 @@ kbd{font-family:var(--mono); font-size:.75em; background:var(--ground-4); border
 <main>
   <div class="banner" id="previewBanner">
     <span>⚑</span>
-    <span><b>Preview mode.</b> Drafting with Claude needs your own API key and can’t run inside this sandboxed preview. Everything else works here: token counting, the template, importing and exporting SillyTavern cards, and the Library. To draft, open the app from the repository (GitHub Pages or a local file) and add your key in Settings.</span>
+    <span><b>Preview mode.</b> Drafting needs your own provider API key and can’t run inside this sandboxed preview. Everything else works here: token counting, the template, importing and exporting SillyTavern cards, and the Library. To draft, open the app from the repository (GitHub Pages or a local file) and add a key in Settings.</span>
   </div>
 
   <div class="desk">
@@ -341,13 +341,9 @@ kbd{font-family:var(--mono); font-size:.75em; background:var(--ground-4); border
 
           <div class="row" style="margin-top:14px; align-items:flex-end">
             <label class="field" style="margin-top:0; flex:2 1 200px">
-              <span class="lab"><span class="k">Model</span></span>
-              <select id="fModel">
-                <option value="claude-sonnet-5">Sonnet 5 — balanced (recommended)</option>
-                <option value="claude-haiku-4-5-20251001">Haiku 4.5 — fastest, cheapest</option>
-                <option value="claude-opus-4-8">Opus 4.8 — richest prose</option>
-                <option value="claude-fable-5">Fable 5 — narrative specialist</option>
-              </select>
+              <span class="lab"><span class="k">Model</span> <span class="note" id="providerBadge">via Claude</span></span>
+              <input type="text" id="fModel" list="modelList" autocomplete="off" spellcheck="false" placeholder="model id">
+              <datalist id="modelList"></datalist>
             </label>
             <label class="toggle" style="flex:1 1 auto; padding-bottom:10px" title="Inject the romantic-enchantment-style skill into narrative sections">
               <input type="checkbox" id="fStyle" checked>
@@ -482,18 +478,28 @@ kbd{font-family:var(--mono); font-size:.75em; background:var(--ground-4); border
       <button class="x" data-close="settingsScrim" aria-label="Close">×</button>
     </div>
     <div class="modal-bd">
-      <div class="eyebrow">Claude API</div>
+      <div class="eyebrow">LLM Provider</div>
       <label class="field" style="margin-top:8px">
-        <span class="lab"><span class="k">Anthropic API Key</span> <span class="note">stored only in this browser</span></span>
+        <span class="lab"><span class="k">Provider</span> <span class="note">each provider keeps its own key</span></span>
+        <select id="setProvider"></select>
+      </label>
+      <label class="field">
+        <span class="lab"><span class="k" id="setKeyLabel">API Key</span> <span class="note">stored only in this browser</span></span>
         <input type="password" id="setKey" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
       </label>
-      <p class="muted" style="font-size:.78rem; margin:8px 0 0">
-        The key is saved to this device’s local storage and sent directly to <code>api.anthropic.com</code> with the direct-browser-access header. It never touches any other server. Get a key at <span style="color:var(--brass)">console.anthropic.com</span>.
-      </p>
+      <p class="muted" id="setKeyHint" style="font-size:.78rem; margin:8px 0 0"></p>
+      <details class="fold" id="setAdvanced" style="border-top:none; margin-top:4px">
+        <summary style="padding:12px 0 8px">Advanced: custom endpoint</summary>
+        <label class="field" style="margin-top:0">
+          <span class="lab"><span class="k">Endpoint URL</span> <span class="note">optional; overrides the default</span></span>
+          <input type="text" id="setEndpoint" placeholder="leave blank for the default" autocomplete="off" spellcheck="false">
+        </label>
+        <p class="muted" style="font-size:.74rem; margin:6px 0 0">Claude, ChatGPT, and Gemini can be called straight from the browser. The others may be blocked by the browser’s cross-origin policy; if a request cannot reach the provider, point this at your own HTTPS proxy.</p>
+      </details>
 
       <hr class="hairline" style="margin:20px 0">
       <div class="eyebrow">Project Memory</div>
-      <div class="hint muted" style="font-size:.78rem; margin:6px 0 8px">Continuity canon, sent to Claude as a <b>cached</b> context block so recurring NPCs and rules carry into every build without re-typing. Edit freely.</div>
+      <div class="hint muted" style="font-size:.78rem; margin:6px 0 8px">Continuity canon, sent to the model as a context block so recurring NPCs and rules carry into every build without re-typing (<b>cached</b> on Claude). Edit freely.</div>
       <label class="field" style="margin-top:0">
         <textarea id="setMemory" rows="9" class="mono" spellcheck="false"></textarea>
       </label>
@@ -693,10 +699,42 @@ Key principles:
 - NPC descriptions 70-96 words with a required hook clause; NPC block is the first trim candidate over ceiling.
 - Residence kept ambiguous (no doormen, no specific home types) to preserve player choice.`;
 
-const MODEL_LABEL = {
-  "claude-sonnet-5":"Sonnet 5","claude-haiku-4-5-20251001":"Haiku 4.5",
-  "claude-opus-4-8":"Opus 4.8","claude-fable-5":"Fable 5"
+/* ---------- providers: multi-LLM registry ----------
+ * format: "anthropic" | "openai" (chat completions) | "gemini"
+ * browser: "yes" = callable directly from a browser; "proxy" = may be blocked
+ *          by cross-origin policy, a custom proxy endpoint can be set.
+ * Model lists are suggestions (editable datalist); type any current model id. */
+const PROVIDERS = {
+  anthropic:{ label:"Claude (Anthropic)", format:"anthropic", host:"api.anthropic.com",
+    endpoint:"https://api.anthropic.com/v1/messages", keyHint:"sk-ant-...",
+    keyUrl:"console.anthropic.com", browser:"yes", caching:true, maxParam:"max_tokens",
+    def:"claude-sonnet-5", models:["claude-sonnet-5","claude-haiku-4-5-20251001","claude-opus-4-8","claude-fable-5"] },
+  openai:{ label:"ChatGPT (OpenAI)", format:"openai", host:"api.openai.com",
+    endpoint:"https://api.openai.com/v1/chat/completions", keyHint:"sk-...",
+    keyUrl:"platform.openai.com/api-keys", browser:"yes", maxParam:"max_completion_tokens",
+    def:"gpt-4.1", models:["gpt-5","gpt-5-mini","gpt-4.1","gpt-4.1-mini","gpt-4o","o4-mini"] },
+  gemini:{ label:"Gemini (Google)", format:"gemini", host:"generativelanguage.googleapis.com",
+    endpoint:"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+    keyHint:"AIza...", keyUrl:"aistudio.google.com/apikey", browser:"yes", maxParam:"maxOutputTokens",
+    def:"gemini-2.5-flash", models:["gemini-2.5-pro","gemini-2.5-flash","gemini-2.0-flash"] },
+  deepseek:{ label:"DeepSeek", format:"openai", host:"api.deepseek.com",
+    endpoint:"https://api.deepseek.com/chat/completions", keyHint:"sk-...",
+    keyUrl:"platform.deepseek.com", browser:"proxy", maxParam:"max_tokens",
+    def:"deepseek-chat", models:["deepseek-chat","deepseek-reasoner"] },
+  glm:{ label:"GLM (Zhipu / Z.ai)", format:"openai", host:"api.z.ai",
+    endpoint:"https://api.z.ai/api/paas/v4/chat/completions", keyHint:"your GLM key",
+    keyUrl:"z.ai or open.bigmodel.cn", browser:"proxy", maxParam:"max_tokens",
+    def:"glm-4.6", models:["glm-4.6","glm-4.5","glm-4.5-air"] },
+  grok:{ label:"Grok (xAI)", format:"openai", host:"api.x.ai",
+    endpoint:"https://api.x.ai/v1/chat/completions", keyHint:"xai-...",
+    keyUrl:"console.x.ai", browser:"proxy", maxParam:"max_tokens",
+    def:"grok-4", models:["grok-4","grok-4-fast","grok-3","grok-3-mini"] },
+  kimi:{ label:"Kimi (Moonshot)", format:"openai", host:"api.moonshot.ai",
+    endpoint:"https://api.moonshot.ai/v1/chat/completions", keyHint:"sk-...",
+    keyUrl:"platform.moonshot.ai", browser:"proxy", maxParam:"max_tokens",
+    def:"kimi-k2-0905-preview", models:["kimi-k2-0905-preview","kimi-k2-turbo-preview","moonshot-v1-128k"] }
 };
+const PROVIDER_ORDER = ["anthropic","openai","gemini","deepseek","glm","grok","kimi"];
 const TARGET_TOKENS = 1800, CEILING_TOKENS = 2150, GAUGE_MAX = 2150;
 
 /* ---------- state / persistence ---------- */
@@ -710,9 +748,21 @@ const load = (k,d)=>{ try{ const v=localStorage.getItem(k); return v==null?d:JSO
 const save = (k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} };
 
 let settings = Object.assign({
-  key:"", model:"claude-sonnet-5", memory:MEMORY_DEFAULT,
-  maxTokens:2600, cache:true, style:true
+  provider:"anthropic", keys:{}, endpoints:{}, models:{},
+  memory:MEMORY_DEFAULT, maxTokens:2600, cache:true, style:true
 }, load(LS.settings,{}));
+// normalise + migrate from the single-key (Claude-only) format
+settings.keys = settings.keys || {}; settings.endpoints = settings.endpoints || {}; settings.models = settings.models || {};
+if(settings.key && !settings.keys.anthropic) settings.keys.anthropic = settings.key;
+if(settings.model && !settings.models.anthropic) settings.models.anthropic = settings.model;
+if(!PROVIDERS[settings.provider]) settings.provider = "anthropic";
+delete settings.key; delete settings.model;
+
+function activeProvider(){ return PROVIDERS[settings.provider] || PROVIDERS.anthropic; }
+function providerShort(){ return activeProvider().label.replace(/\s*\(.*\)/,""); }
+function currentKey(){ return (settings.keys[settings.provider]||"").trim(); }
+function currentModel(){ return (settings.models[settings.provider]||"").trim() || activeProvider().def; }
+function currentEndpoint(){ return (settings.endpoints[settings.provider]||"").trim() || activeProvider().endpoint; }
 
 let avatarDataUrl = null;   // current portrait
 let currentId = null;       // id of the record being edited (if saved)
@@ -757,14 +807,57 @@ function updateGauge(){
 /* =================================================================
  * CLAUDE API  (direct browser access + prompt caching)
  * ================================================================= */
-function buildSystem(){
+const STATIC_SYSTEM = RULES + "\n\nTEMPLATE (preserve structure and brackets exactly):\n\n" + TEMPLATE;
+// Anthropic: structured blocks with cache_control so the static prefix is cached.
+function buildAnthropicSystem(){
   const blocks=[];
-  const staticText = RULES + "\n\nTEMPLATE (preserve structure and brackets exactly):\n\n" + TEMPLATE;
-  blocks.push(settings.cache ? {type:"text",text:staticText,cache_control:{type:"ephemeral"}} : {type:"text",text:staticText});
+  blocks.push(settings.cache ? {type:"text",text:STATIC_SYSTEM,cache_control:{type:"ephemeral"}} : {type:"text",text:STATIC_SYSTEM});
   const mem=(settings.memory||"").trim();
   if(mem) blocks.push(settings.cache ? {type:"text",text:mem,cache_control:{type:"ephemeral"}} : {type:"text",text:mem});
   if($("#fStyle").checked) blocks.push({type:"text",text:STYLE_SKILL});
   return blocks;
+}
+// Everyone else: one flat system string (static prefix first so implicit caching can hit).
+function getSystemText(){
+  let s = STATIC_SYSTEM;
+  const mem=(settings.memory||"").trim();
+  if(mem) s += "\n\n" + mem;
+  if($("#fStyle").checked) s += "\n\n" + STYLE_SKILL;
+  return s;
+}
+// Build a provider-specific request { url, headers, body }.
+function buildRequest(mode){
+  const p=activeProvider(), model=currentModel(), user=userMessage(mode);
+  const maxTok=Math.max(256,Math.min(8192,(settings.maxTokens|0)||2600));
+  if(p.format==="anthropic"){
+    return { url:currentEndpoint(),
+      headers:{ "content-type":"application/json","x-api-key":currentKey(),
+        "anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true" },
+      body:{ model, max_tokens:maxTok, system:buildAnthropicSystem(), messages:[{role:"user",content:user}] } };
+  }
+  if(p.format==="gemini"){
+    const base=currentEndpoint().replace("{model}",encodeURIComponent(model));
+    return { url:base+(base.includes("?")?"&":"?")+"key="+encodeURIComponent(currentKey()),
+      headers:{ "content-type":"application/json" },
+      body:{ systemInstruction:{parts:[{text:getSystemText()}]},
+        contents:[{role:"user",parts:[{text:user}]}],
+        generationConfig:{ maxOutputTokens:maxTok } } };
+  }
+  // openai-compatible chat completions
+  const body={ model, messages:[{role:"system",content:getSystemText()},{role:"user",content:user}] };
+  body[p.maxParam||"max_tokens"]=maxTok;
+  return { url:currentEndpoint(),
+    headers:{ "content-type":"application/json","authorization":"Bearer "+currentKey() }, body };
+}
+function parseResponse(format,data){
+  if(format==="anthropic") return (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  if(format==="gemini"){ const c=(data.candidates||[])[0]||{}; return ((c.content&&c.content.parts)||[]).map(x=>x.text||"").join(""); }
+  const ch=(data.choices||[])[0]||{}; return (ch.message&&ch.message.content)||"";
+}
+function apiError(data,status){
+  if(data && data.error) return typeof data.error==="string"?data.error:(data.error.message||JSON.stringify(data.error));
+  if(data && data.message) return data.message;
+  return "HTTP "+status;
 }
 function userMessage(mode){
   const name=$("#fName").value.trim();
@@ -780,42 +873,40 @@ function userMessage(mode){
   m+="\n\nRemember: no em dashes, no markdown, {user} is a blank slate (he/him), rename the character tag to the given name in lowercase_with_underscores, keep the whole thing near or under "+TARGET_TOKENS+" tokens.";
   return m;
 }
-async function callClaude(mode){
+async function callModel(mode){
+  const p=activeProvider();
   if(IN_ARTIFACT){ toast("Drafting needs the hosted/local app with your key.","err"); openModal("settingsScrim"); return; }
-  if(!settings.key){ toast("Add your Anthropic API key in Settings first.","err"); openModal("settingsScrim"); return; }
+  if(!currentKey()){ toast("Add your "+providerShort()+" API key in Settings first.","err"); openModal("settingsScrim"); return; }
   if(mode==="draft" && !$("#fBrief").value.trim() && !$("#fName").value.trim()){ toast("Add a name or brief to draft from.","err"); return; }
   if(mode==="refine" && !$("#fRefine").value.trim()){ toast("Type the revision you want.","err"); return; }
   if(mode==="refine" && !$("#fProfile").value.trim()){ toast("Nothing to refine yet.","err"); return; }
 
+  const req=buildRequest(mode);
   setBusy(true, mode);
   try{
-    const res = await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{
-        "content-type":"application/json",
-        "x-api-key":settings.key,
-        "anthropic-version":"2023-06-01",
-        "anthropic-dangerous-direct-browser-access":"true"
-      },
-      body:JSON.stringify({
-        model:settings.model,
-        max_tokens:Math.max(256,Math.min(8192,settings.maxTokens|0||2600)),
-        system:buildSystem(),
-        messages:[{role:"user",content:userMessage(mode)}]
-      })
-    });
-    const data = await res.json();
-    if(!res.ok){ throw new Error((data && data.error && data.error.message) || ("HTTP "+res.status)); }
-    let out=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
-    out = stripFences(out);
+    let res;
+    try{
+      res = await fetch(req.url,{ method:"POST", headers:req.headers, body:JSON.stringify(req.body) });
+    }catch(netErr){
+      throw new Error("could not reach "+p.host+". "+(p.browser==="proxy"
+        ? "This provider often blocks direct browser calls; set a proxy endpoint in Settings > Advanced."
+        : "Check your connection."));
+    }
+    const data = await res.json().catch(()=>null);
+    if(!res.ok){ throw new Error(apiError(data,res.status)); }
+    let out = stripFences(parseResponse(p.format,data).trim());
+    if(!out){
+      const blocked = p.format==="gemini" && data && data.promptFeedback && data.promptFeedback.blockReason;
+      throw new Error("empty response"+(blocked?" (blocked: "+data.promptFeedback.blockReason+")":"")+".");
+    }
     $("#fProfile").value = out;
     if(!$("#fName").value.trim()) $("#fName").value = guessName(out);
     updateGauge(); persistCurrent();
     if(mode==="refine") $("#fRefine").value="";
-    showUsage(data.usage, data.model||settings.model);
+    showUsage(p.format, data, currentModel());
     toast("Draft ready. Your edits are canonical.","ok");
   }catch(err){
-    toast("Claude: "+err.message,"err");
+    toast(providerShort()+": "+err.message,"err");
   }finally{ setBusy(false, mode); }
 }
 function stripFences(t){
@@ -830,17 +921,20 @@ function guessName(block){
   }
   return "";
 }
-function showUsage(u,model){
-  if(!u) return;
+function showUsage(format,data,model){
+  let inTok=0,outTok=0,cached=0,have=false;
+  if(format==="anthropic" && data.usage){ const u=data.usage; const cr=u.cache_read_input_tokens||0,cc=u.cache_creation_input_tokens||0; inTok=(u.input_tokens||0)+cr+cc; outTok=u.output_tokens||0; cached=cr; have=true; }
+  else if(format==="gemini" && data.usageMetadata){ const u=data.usageMetadata; inTok=u.promptTokenCount||0; outTok=u.candidatesTokenCount||0; cached=u.cachedContentTokenCount||0; have=true; }
+  else if(data.usage){ const u=data.usage; inTok=u.prompt_tokens||0; outTok=u.completion_tokens||0; cached=(u.prompt_tokens_details&&u.prompt_tokens_details.cached_tokens)||0; have=true; }
+  if(!have) return;
   const el=$("#usage"); el.classList.add("show");
-  const cr=u.cache_read_input_tokens||0, cc=u.cache_creation_input_tokens||0;
-  el.textContent = `${MODEL_LABEL[model]||model} · in ${(u.input_tokens||0)+cr+cc} (cached ${cr} read${cc?`, ${cc} written`:""}) · out ${u.output_tokens||0}`;
+  el.textContent = `${model} · in ${inTok}${cached?` (cached ${cached})`:""} · out ${outTok}`;
 }
 function setBusy(b,mode){
   const gen=$("#btnGenerate"), ref=$("#btnRefine");
   gen.disabled=b; ref.disabled=b;
   if(mode==="refine"){ ref.innerHTML=b?'<span class="spin"></span>Refining':'Refine'; }
-  else{ $("#genLabel").textContent=b?"Drafting":"Draft with Claude"; $("#genIcon").outerHTML=b?'<span class="spin" id="genIcon"></span>':'<span class="ic" id="genIcon">✒</span>'; }
+  else{ $("#genLabel").textContent=b?"Drafting":("Draft with "+providerShort()); $("#genIcon").outerHTML=b?'<span class="spin" id="genIcon"></span>':'<span class="ic" id="genIcon">✒</span>'; }
 }
 
 /* =================================================================
@@ -1154,21 +1248,46 @@ function openModal(id){ $("#"+id).classList.add("open"); }
 function closeModal(id){ $("#"+id).classList.remove("open"); }
 
 function openSettings(){
-  $("#setKey").value=settings.key||"";
+  const sel=$("#setProvider");
+  if(!sel.dataset.built){ sel.innerHTML=PROVIDER_ORDER.map(id=>`<option value="${id}">${PROVIDERS[id].label}</option>`).join(""); sel.dataset.built="1"; }
+  sel.value=settings.provider;
+  syncProviderFields();
   $("#setMemory").value=settings.memory||MEMORY_DEFAULT;
   $("#setMaxTokens").value=settings.maxTokens||2600;
   $("#setCache").checked=!!settings.cache;
   openModal("settingsScrim");
 }
+// mirror the chosen provider's stored key / endpoint / hint into the modal
+function syncProviderFields(){
+  const id=$("#setProvider").value, p=PROVIDERS[id]||PROVIDERS.anthropic;
+  $("#setKey").value=settings.keys[id]||"";
+  $("#setKey").placeholder=p.keyHint;
+  $("#setKeyLabel").textContent=p.label.replace(/\s*\(.*\)/,"")+" API Key";
+  $("#setEndpoint").value=settings.endpoints[id]||"";
+  $("#setEndpoint").placeholder=p.endpoint;
+  const cors = p.browser==="proxy" ? " This provider may block direct browser calls; if it fails, add a proxy endpoint below." : "";
+  $("#setKeyHint").innerHTML=`Saved only on this device and sent directly to <code>${p.host}</code>. Get a key at <span style="color:var(--brass)">${p.keyUrl}</span>.${cors}`;
+}
 function saveSettings(){
-  settings.key=$("#setKey").value.trim();
+  const id=$("#setProvider").value;
+  settings.provider=id;
+  settings.keys[id]=$("#setKey").value.trim();
+  settings.endpoints[id]=$("#setEndpoint").value.trim();
   settings.memory=$("#setMemory").value;
   settings.maxTokens=parseInt($("#setMaxTokens").value,10)||2600;
   settings.cache=$("#setCache").checked;
-  settings.model=$("#fModel").value;
   settings.style=$("#fStyle").checked;
   save(LS.settings,settings);
+  applyProviderToUI();
   closeModal("settingsScrim"); toast("Settings saved.","ok");
+}
+// reflect the active provider in the main workbench (model list, badges)
+function applyProviderToUI(){
+  const p=activeProvider();
+  $("#modelList").innerHTML=p.models.map(m=>`<option value="${m}"></option>`).join("");
+  $("#fModel").value=currentModel();
+  $("#providerBadge").textContent="via "+providerShort();
+  $("#genLabel").textContent="Draft with "+providerShort();
 }
 function setTheme(t){
   document.documentElement.setAttribute("data-theme",t);
@@ -1194,7 +1313,7 @@ function boot(){
   setTheme(load(LS.theme,null) || "dark");
 
   // restore controls
-  $("#fModel").value=settings.model; $("#fStyle").checked=!!settings.style;
+  applyProviderToUI(); $("#fStyle").checked=!!settings.style;
 
   // restore working entry
   const cur=load(LS.current,null);
@@ -1204,7 +1323,8 @@ function boot(){
   // wire inputs
   ["fName","fBrief","fProfile","fScenario","fFirst","fAlts","fExamples","fSystem","fTags","fVersion","fCreator","fNotes"]
     .forEach(id=>$("#"+id).addEventListener("input",()=>{ if(id==="fProfile") updateGauge(); persistCurrent(); }));
-  $("#fModel").addEventListener("change",()=>{ settings.model=$("#fModel").value; save(LS.settings,settings); });
+  $("#fModel").addEventListener("input",()=>{ settings.models[settings.provider]=$("#fModel").value.trim(); save(LS.settings,settings); });
+  $("#setProvider").addEventListener("change",syncProviderFields);
   $("#fStyle").addEventListener("change",()=>{ settings.style=$("#fStyle").checked; save(LS.settings,settings); });
 
   // masthead
@@ -1223,9 +1343,9 @@ function boot(){
   $("#btnTheme").addEventListener("click",()=>setTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark"));
 
   // generate / refine
-  $("#btnGenerate").addEventListener("click",()=>callClaude("draft"));
-  $("#btnRefine").addEventListener("click",()=>callClaude("refine"));
-  $("#fRefine").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); callClaude("refine"); }});
+  $("#btnGenerate").addEventListener("click",()=>callModel("draft"));
+  $("#btnRefine").addEventListener("click",()=>callModel("refine"));
+  $("#fRefine").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); callModel("refine"); }});
 
   // proof actions
   $("#btnCopy").addEventListener("click",()=>{
@@ -1238,7 +1358,7 @@ function boot(){
 
   // settings modal
   $("#btnSaveSettings").addEventListener("click",saveSettings);
-  $("#btnClearKey").addEventListener("click",()=>{ settings.key=""; $("#setKey").value=""; save(LS.settings,settings); toast("API key forgotten."); });
+  $("#btnClearKey").addEventListener("click",()=>{ const id=$("#setProvider").value; settings.keys[id]=""; $("#setKey").value=""; save(LS.settings,settings); toast(PROVIDERS[id].label.replace(/\s*\(.*\)/,"")+" key forgotten."); });
   $("#btnResetMemory").addEventListener("click",()=>{ $("#setMemory").value=MEMORY_DEFAULT; toast("Memory reset (save to keep)."); });
 
   // avatar
