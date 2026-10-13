@@ -41,7 +41,7 @@ second device needed.
 
 - **Server:** Node.js (Termux's Android build of `nodejs-lts`) runs `server.js`
   as a child process of a foreground service, on `127.0.0.1:8000` only. It isn't
-  reachable from the network. The notification has a **Stop** button, and swiping
+  reachable from the network. The notification has a **Close tavern** button, and swiping
   the app out of Recents also stops it.
 - **UI:** a full-screen WebView on that address. Exports (cards, chats,
   backups) are saved to `Downloads/SillyTavern/`. Imports use the system file
@@ -56,7 +56,7 @@ second device needed.
 - Android 14+ target with edge-to-edge layout padded for the punch-hole camera,
   gesture bar and keyboard.
 - Predictive back gesture. Back at the root minimizes instead of killing the server.
-- Material You boot screen and a monochrome icon for Themed icons.
+- A monochrome seal icon for Pixel's Themed icons.
 - V8 heap raised to 4 GB (the phone has 16 GB) for long chats.
 - The foreground service keeps replies streaming while you switch apps.
 
