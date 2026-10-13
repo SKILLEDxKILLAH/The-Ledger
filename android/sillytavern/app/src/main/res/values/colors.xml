@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="icon_bg">#1E1B2E</color>
+    <color name="icon_fg">#F2C46D</color>
+    <!-- Matches SillyTavern's default dark theme so system bars blend in. -->
+    <color name="st_bg">#171717</color>
+</resources>

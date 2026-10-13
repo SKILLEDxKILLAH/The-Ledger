@@ -1,0 +1,7 @@
+.gradle/
+build/
+local.properties
+# Generated in CI by scripts/prepare-*.sh
+app/src/main/jniLibs/
+app/src/main/assets/
+work/

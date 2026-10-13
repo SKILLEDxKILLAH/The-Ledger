@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SillyTavern</string>
+    <string name="channel_name">Server</string>
+    <string name="notif_running">Server running on this phone</string>
+    <string name="notif_starting">Starting server…</string>
+    <string name="notif_stop">Stop</string>
+    <string name="unpacking">Unpacking SillyTavern (first launch or update)…</string>
+    <string name="starting">Starting server… the first launch compiles assets and can take a minute.</string>
+    <string name="failed">The server stopped.</string>
+    <string name="retry">Retry</string>
+</resources>
