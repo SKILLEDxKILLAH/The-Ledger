@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Open ledger, white silhouette for the status bar. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M2,5.5 C5,4 8.5,4 11.2,5.5 L11.2,19.5 C8.5,18 5,18 2,19.5 Z M12.8,5.5 C15.5,4 19,4 22,5.5 L22,19.5 C19,18 15.5,18 12.8,19.5 Z" />
+</vector>

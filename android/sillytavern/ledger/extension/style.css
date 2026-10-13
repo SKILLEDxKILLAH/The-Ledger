@@ -1,0 +1,142 @@
+/* The Plugin Ledger host: top-bar button, overlay and reload bar.
+   Colours follow The Ledger (oxblood, brass, ruled ground). */
+#ledger-explorer-button .drawer-icon{color:#c6a15f}
+#ledger-explorer-button .drawer-icon:hover{color:#dcbd7f}
+
+/* Explicit box: SillyTavern's broad layout rules otherwise collapse the overlay. */
+body > #ledger-explorer{
+    position:fixed!important; top:0!important; left:0!important; right:0!important; bottom:0!important;
+    width:100vw!important; height:100dvh!important; max-height:none!important; margin:0!important; padding:0!important;
+    z-index:10000;
+    background:#14110d;
+    opacity:0; transform:translateY(14px);
+    transition:opacity .2s ease, transform .2s ease;
+}
+body > #ledger-explorer.on{opacity:1; transform:none}
+#ledger-explorer iframe{width:100%!important; height:100%!important; border:0; display:block; background:#14110d}
+body.ledger-explorer-open{overflow:hidden}
+
+#ledger-reload-bar{
+    position:fixed; z-index:9999; left:50%; transform:translateX(-50%);
+    top:calc(var(--topBarBlockSize, 50px) + 10px);
+    display:flex; align-items:center; gap:10px; max-width:min(94vw,560px);
+    padding:8px 8px 8px 14px; border-radius:8px;
+    background:#231e17; color:#ece2ce; border:1px solid rgba(198,161,95,.38); border-left:3px solid #9a2d33;
+    box-shadow:0 18px 40px -20px rgba(0,0,0,.9);
+    font-size:calc(var(--mainFontSize) * .92);
+}
+#ledger-reload-bar .menu_button{margin:0; white-space:nowrap}
+#ledger-reload-bar .ledger-later{background:none; border:0; color:#877c64; font-size:1.3em; cursor:pointer; padding:0 6px}
+
+#ledger-explorer-fab{
+    position:fixed; z-index:9998; right:14px;
+    bottom:calc(var(--bottomFormBlockSize, 40px) + 26px);
+    width:46px; height:46px; border-radius:50%; cursor:pointer;
+    display:grid; place-items:center; font-size:20px;
+    background:#1b1712; color:#c6a15f; border:1px solid #c6a15f;
+    box-shadow:inset 0 0 0 3px rgba(198,161,95,.14), 0 12px 30px -12px rgba(0,0,0,.9);
+}
+#ledger-explorer-fab:hover{color:#dcbd7f}
+body.ledger-explorer-open #ledger-explorer-fab{display:none}
+
+/* ============================================================== phone shell
+   Only on narrow screens (body.ledger-mobile). SillyTavern's unlabelled icon row
+   is hidden; its panels still open through their own toggles, driven from here. */
+#ledger-header{display:none}
+body.ledger-mobile #top-settings-holder > .drawer > .drawer-toggle,
+body.ledger-mobile #ledger-explorer-button{display:none!important}
+/* A taller bar for thumbs; panels and the chat are positioned from this size. */
+body.ledger-mobile{--topBarBlockSize:50px}
+body.ledger-mobile #top-bar,body.ledger-mobile #top-settings-holder{height:var(--topBarBlockSize)}
+body.ledger-mobile #top-settings-holder{justify-content:stretch}
+body.ledger-mobile #top-settings-holder > .drawer{flex:0 0 0; width:0; min-width:0; margin:0; padding:0}
+body.ledger-mobile #ledger-header{
+    display:flex; align-items:center; gap:2px; flex:1 1 100%; width:100%;
+    height:var(--topBarBlockSize); padding:0 6px; box-sizing:border-box;
+}
+.lh-btn{
+    flex:none; width:44px; height:44px; border-radius:50%; display:grid; place-items:center;
+    background:none; border:0; color:#b8ac93; font-size:18px; cursor:pointer; transition:background .15s,color .15s;
+}
+.lh-btn:active,.lh-btn.on{color:#dcbd7f; background:rgba(198,161,95,.12)}
+#lh-lead{color:#c6a15f}
+.lh-title{flex:1; min-width:0; text-align:center; line-height:1.15}
+.lh-title .lh-eyebrow{white-space:nowrap}
+.lh-eyebrow{
+    font-family:"Cormorant Ledger","EB Garamond Ledger",Georgia,serif; font-weight:600;
+    font-size:9px; letter-spacing:.3em; text-transform:uppercase; color:#a9843f;
+}
+.lh-name{
+    font-family:"Cormorant Ledger","EB Garamond Ledger",Georgia,serif; font-weight:600;
+    font-size:18px; color:#ece2ce; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* ---- menu sheet ---- */
+/* Explicit box, as for the explorer overlay: SillyTavern's layout rules collapse it otherwise. */
+body > #ledger-menu{
+    position:fixed!important; top:0!important; left:0!important; right:0!important; bottom:0!important;
+    width:100vw!important; height:100dvh!important; max-height:none!important; margin:0!important; padding:0!important;
+    z-index:9990; pointer-events:none;
+}
+#ledger-menu .lm-scrim{position:absolute; inset:0; background:rgba(8,6,4,.6); opacity:0; transition:opacity .2s}
+#ledger-menu .lm-sheet{
+    position:absolute; top:0; bottom:0; left:0; width:min(86vw,360px); height:100%; overflow-y:auto; box-sizing:border-box;
+    background:linear-gradient(180deg,rgba(198,161,95,.06),transparent 160px),#1b1712;
+    border-right:1px solid rgba(198,161,95,.38); box-shadow:18px 0 50px -20px rgba(0,0,0,.9);
+    transform:translateX(-102%); transition:transform .22s ease;
+    padding:calc(env(safe-area-inset-top) + 18px) 12px 24px;
+}
+body.ledger-menu-open #ledger-menu{pointer-events:auto}
+body.ledger-menu-open #ledger-menu .lm-scrim{opacity:1}
+body.ledger-menu-open #ledger-menu .lm-sheet{transform:none}
+.lm-head{display:flex; align-items:center; gap:12px; padding:0 6px 16px; border-bottom:1px solid rgba(198,161,95,.2); margin-bottom:6px}
+.lm-seal{
+    width:46px; height:46px; border-radius:50%; display:grid; place-items:center; flex:none;
+    border:1px solid #c6a15f; color:#c6a15f; box-shadow:inset 0 0 0 3px rgba(198,161,95,.14);
+    font-family:"Cormorant Ledger",Georgia,serif; font-weight:600; font-size:18px;
+}
+.lm-title{font-family:"Cormorant Ledger",Georgia,serif; font-weight:600; font-size:24px; color:#ece2ce; line-height:1}
+.lm-group{padding:10px 0 4px}
+.lm-group-t{padding:6px 8px; font-family:"Cormorant Ledger",Georgia,serif; font-weight:600; font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:#a9843f}
+.lm-item{
+    display:flex; align-items:center; gap:14px; width:100%; text-align:left; cursor:pointer;
+    padding:11px 10px; border:0; border-radius:8px; background:none; color:#ece2ce;
+}
+.lm-item:active,.lm-item:hover{background:rgba(154,45,51,.22)}
+.lm-item i{font-size:19px; color:#c6a15f; width:24px}
+.lm-item span{display:flex; flex-direction:column; min-width:0}
+.lm-item b{font-weight:600; font-size:16px}
+.lm-item small{font-size:13px; color:#877c64; font-style:italic; line-height:1.3}
+.lm-guide{margin-top:10px; border-top:1px solid rgba(198,161,95,.2); border-radius:0; padding-top:16px}
+
+/* ---- getting-started guide ----
+   A light list on the page, not a boxed card: hairlines, round step markers, and
+   only the next step gets a filled button. */
+#ledger-guide{margin:18px 18px 8px; padding:0}
+#ledger-guide .lg-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:4px}
+#ledger-guide h3{margin:4px 0 0; font-size:26px; font-weight:600; color:#ece2ce}
+#ledger-guide .lg-count{font-family:"Cormorant Ledger",Georgia,serif; font-weight:600; font-size:22px; color:#dcbd7f}
+#ledger-guide .lg-count span{font-size:15px; color:#877c64}
+#ledger-guide .lg-steps{list-style:none; margin:6px 0 0; padding:0}
+#ledger-guide li{display:flex; align-items:center; gap:14px; padding:13px 0}
+#ledger-guide li + li{background:linear-gradient(90deg,rgba(198,161,95,.16),transparent) top/100% 1px no-repeat}
+#ledger-guide .lg-no{
+    flex:none; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-size:14px;
+    background:rgba(198,161,95,.1); color:#c6a15f; font-family:"Cormorant Ledger",Georgia,serif; font-weight:600;
+}
+#ledger-guide li.done .lg-no{background:rgba(92,125,98,.28); color:#a8c7ad; font-size:12px}
+#ledger-guide .lg-text{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px}
+#ledger-guide .lg-text b{font-size:16px; font-weight:600; color:#ece2ce}
+#ledger-guide .lg-text small{font-size:13.5px; color:#9d917a; line-height:1.35}
+#ledger-guide li.done .lg-text b{color:#877c64; font-weight:500}
+#ledger-guide li.done .lg-text small{display:none}
+#ledger-guide .lg-go{
+    flex:none; margin:0!important; white-space:nowrap; padding:7px 14px!important; font-size:14px;
+    border-radius:999px!important; background:none!important; border:0!important; color:#dcbd7f!important;
+}
+#ledger-guide li.next .lg-go{
+    background:linear-gradient(180deg,#b23a40,#9a2d33)!important; color:#f4e7d6!important;
+    box-shadow:0 8px 20px -10px rgba(154,45,51,.8);
+}
+#ledger-guide li.next .lg-no{background:#9a2d33; color:#f4e7d6}
+#ledger-guide .lg-hide{display:block; margin:4px auto 0; background:none; border:0; color:#6f6553; font-style:italic; font-size:13px; padding:8px; cursor:pointer}

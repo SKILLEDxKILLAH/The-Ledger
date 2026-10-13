@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src file:">
+<title>The Ledger · Tavern</title>
+<style>
+/* Boot screen shown while the on-device server unpacks and starts.
+   Tokens mirror The Ledger (index.html). Driven by MainActivity via bootState(). */
+@font-face{font-family:"EB Garamond Ledger"; font-weight:400 800; src:url("fonts/eb-garamond-latin-wght-normal.woff2") format("woff2")}
+@font-face{font-family:"EB Garamond Ledger"; font-style:italic; font-weight:400 800; src:url("fonts/eb-garamond-latin-wght-italic.woff2") format("woff2")}
+@font-face{font-family:"Cormorant Ledger"; font-weight:600; src:url("fonts/cormorant-garamond-latin-600-normal.woff2") format("woff2")}
+:root{
+  --ground:#14110d; --ground-2:#1b1712; --ground-3:#231e17;
+  --ink:#ece2ce; --ink-soft:#b8ac93; --ink-faint:#877c64;
+  --line:rgba(198,161,95,.20); --line-2:rgba(198,161,95,.38);
+  --oxblood:#9a2d33; --oxblood-2:#b23a40; --on-oxblood:#f4e7d6;
+  --brass:#c6a15f; --brass-2:#dcbd7f; --danger:#c14d44;
+  --serif:"Cormorant Ledger","EB Garamond Ledger",Georgia,serif;
+  --body:"EB Garamond Ledger","Noto Serif",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%; margin:0}
+body{
+  background:var(--ground); color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(120% 70% at 50% -10%, rgba(198,161,95,.10), transparent 60%),
+    radial-gradient(90% 60% at 50% 115%, rgba(154,45,51,.14), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 27px, rgba(198,161,95,.08) 27px 28px);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:calc(env(safe-area-inset-top) + 24px) 28px calc(env(safe-area-inset-bottom) + 24px); text-align:center;
+}
+.seal{
+  width:112px; height:112px; border-radius:50%; display:grid; place-items:center; position:relative;
+  border:1px solid var(--brass); color:var(--brass);
+  box-shadow:inset 0 0 0 5px rgba(198,161,95,.12), 0 20px 50px -20px rgba(0,0,0,.9);
+  font-family:var(--serif); font-weight:600; font-size:2.6rem; letter-spacing:.04em;
+}
+.seal::after{content:""; position:absolute; inset:-9px; border-radius:50%; border:1px solid var(--line);
+  border-top-color:var(--brass); animation:turn 2.4s linear infinite}
+.done .seal::after,.failed .seal::after{animation:none; border-top-color:var(--line)}
+.failed .seal{border-color:var(--danger); color:var(--danger)}
+@keyframes turn{to{transform:rotate(360deg)}}
+.eyebrow{margin-top:34px; font-family:var(--serif); font-size:.74rem; letter-spacing:.3em; text-transform:uppercase; color:var(--brass); font-weight:600}
+h1{font-family:var(--serif); font-weight:600; font-size:2.4rem; margin:8px 0 0; letter-spacing:.02em}
+.sub{font-style:italic; color:var(--ink-faint); margin-top:4px}
+.rule{width:min(260px,70vw); height:1px; margin:26px auto 22px; background:linear-gradient(90deg,transparent,var(--line-2),transparent)}
+.bar{width:min(260px,70vw); height:3px; border-radius:2px; background:var(--ground-3); overflow:hidden; margin:0 auto 18px}
+.bar i{display:block; height:100%; width:0; background:linear-gradient(90deg,var(--oxblood),var(--brass)); transition:width .3s ease}
+.bar.indet i{width:35%; animation:sweep 1.3s ease-in-out infinite}
+@keyframes sweep{from{transform:translateX(-110%)}to{transform:translateX(300%)}}
+#status{color:var(--ink-soft); font-size:1.05rem; line-height:1.5; max-width:420px; min-height:3em}
+#line{font-family:"Noto Sans Mono",monospace; font-size:.72rem; color:var(--ink-faint); margin-top:8px; max-width:92vw;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+#log{display:none; width:100%; max-width:560px; max-height:38vh; overflow:auto; margin-top:18px; padding:12px; text-align:left;
+  background:var(--ground-2); border:1px solid var(--line-2); border-radius:8px;
+  font-family:"Noto Sans Mono",monospace; font-size:.7rem; line-height:1.45; color:var(--ink-soft); white-space:pre-wrap; user-select:text}
+.failed #log{display:block}
+.btn{display:none; margin-top:18px; padding:11px 22px; border-radius:4px; cursor:pointer; font-family:var(--body); font-size:1rem; letter-spacing:.02em;
+  background:linear-gradient(180deg,var(--oxblood-2),var(--oxblood)); color:var(--on-oxblood); border:1px solid color-mix(in srgb,var(--oxblood) 60%,var(--brass))}
+.failed .btn{display:inline-block}
+.failed .bar{visibility:hidden}
+</style>
+</head>
+<body>
+  <div class="seal">TL</div>
+  <div class="eyebrow">The Ledger · Tavern</div>
+  <h1>SillyTavern</h1>
+  <div class="sub">kept on this device, by your own hand</div>
+  <div class="rule"></div>
+  <div class="bar indet" id="bar"><i></i></div>
+  <div id="status">Opening the books…</div>
+  <div id="line"></div>
+  <pre id="log"></pre>
+  <button class="btn" id="retry" type="button">Try again</button>
+<script>
+  // Called from MainActivity: state is UNPACKING | STARTING | RUNNING | FAILED.
+  window.bootState = function (state, detail, pct, log) {
+    var parts = String(detail || "").split("\n\n");
+    document.getElementById("status").textContent = parts[0] || "";
+    document.getElementById("line").textContent = parts[1] || "";
+    var bar = document.getElementById("bar");
+    bar.classList.toggle("indet", !(pct >= 0));
+    bar.firstElementChild.style.width = pct >= 0 ? pct + "%" : "";
+    document.body.className = state === "FAILED" ? "failed" : state === "RUNNING" ? "done" : "";
+    if (state === "FAILED") document.getElementById("log").textContent = log || "";
+    if (state === "RUNNING") document.getElementById("status").textContent = "The books are open.";
+  };
+  document.getElementById("retry").onclick = function () { if (window.StPocket) StPocket.retry(); };
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ledger Tavern</string>
+    <string name="channel_name">Tavern server</string>
+    <string name="notif_running">The tavern is open on this phone</string>
+    <string name="notif_starting">Opening the tavern…</string>
+    <string name="notif_stop">Close tavern</string>
+    <string name="unpacking">Unpacking the tavern (first launch or update)…</string>
+    <string name="starting">Opening the tavern… The first launch binds the volumes and can take a minute.</string>
+    <string name="failed">The tavern closed unexpectedly.</string>
+</resources>

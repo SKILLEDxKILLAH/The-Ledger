@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The Ledger palette (see index.html design tokens). -->
+    <color name="ledger_ground">#14110D</color>
+    <color name="ledger_ground_2">#1B1712</color>
+    <color name="ledger_brass">#C6A15F</color>
+    <color name="ledger_brass_2">#DCBD7F</color>
+    <color name="ledger_oxblood">#9A2D33</color>
+</resources>

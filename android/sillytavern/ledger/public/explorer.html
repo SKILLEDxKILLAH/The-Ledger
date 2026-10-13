@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<!-- Readmes are third-party HTML: even after sanitising, no script but ours may run. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self'; connect-src 'self' https://raw.githubusercontent.com https://api.github.com; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>The Plugin Ledger</title>
+<link rel="stylesheet" href="explorer.css">
+</head>
+<body>
+<div class="chrome">
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <form class="bar" id="bar" autocomplete="off">
+    <button type="button" class="ic" id="btnBack" aria-label="Back"></button>
+    <button type="button" class="ic" id="btnFwd" aria-label="Forward"></button>
+    <button type="button" class="ic" id="btnReload" aria-label="Reload"></button>
+    <label class="omni">
+      <span class="omni-mark" id="omniMark" aria-hidden="true"></span>
+      <input id="omni" type="search" enterkeyhint="go" spellcheck="false" autocapitalize="off"
+        placeholder="Search plugins or paste a GitHub URL" aria-label="Address">
+    </label>
+    <button type="button" class="ic" id="btnShelf" aria-label="Bookmark this page"></button>
+    <button type="button" class="ic close" id="btnClose" aria-label="Return to the tavern"></button>
+  </form>
+  <div class="progress" id="progress"></div>
+</div>
+<div class="banner" id="banner" hidden>
+  <span>Your plugin changes take effect after the tavern reloads.</span>
+  <button type="button" class="btn primary small" id="btnApply">Reload tavern</button>
+</div>
+<main id="view" tabindex="-1"></main>
+<nav class="dock" id="dock">
+  <a href="#" data-go="ledger://catalog" class="dock-i"><span class="ico" data-ico="book"></span><span>Catalogue</span></a>
+  <a href="#" data-go="ledger://installed" class="dock-i"><span class="ico" data-ico="check"></span><span>Entered</span></a>
+  <a href="#" data-go="ledger://shelf" class="dock-i"><span class="ico" data-ico="star"></span><span>Shelf</span></a>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal" id="modal" hidden>
+  <div class="modal-card">
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn ghost" id="modalNo">Keep it</button>
+      <button type="button" class="btn danger" id="modalYes">Remove</button>
+    </div>
+  </div>
+</div>
+<script src="explorer.js"></script>
+</body>
+</html>
