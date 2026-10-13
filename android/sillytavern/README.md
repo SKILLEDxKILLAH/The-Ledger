@@ -36,9 +36,8 @@ second device needed.
 
 ## Install
 
-1. Open the repo's **Releases** on the phone and download the newest
-   `SillyTavern-<version>-arm64-v8a.apk` (published by the
-   `SillyTavern Android APK` workflow).
+1. On the phone, open the repo's **latest release**
+   (`/releases/latest`) and download `LedgerTavern-<version>-arm64-v8a.apk`.
 2. Open it and allow "Install unknown apps" for your browser when asked.
 3. Launch **Ledger Tavern**. The first launch unpacks about 400 MB and compiles
    frontend assets, which takes around a minute. Later launches take a few seconds.
@@ -86,9 +85,10 @@ scripts/prepare-payload.sh 1.19.0            # SillyTavern  -> app/src/main/asse
 ./gradlew assembleRelease -PstVersion=1.19.0
 ```
 
-To get stable signing (so updates install over the top and keep your data),
-add repo secrets `ST_KEYSTORE_BASE64` (a base64'd JKS with key alias `st`) and
-`ST_KEYSTORE_PASSWORD`.
+Releases are signed with the app's permanent key (see `signing/README.md`), so
+each one installs over the previous one and keeps your data. CI decrypts the key
+with the `ST_KEYSTORE_PASSWORD` secret and won't publish an APK signed with
+anything else.
 
 ## License
 

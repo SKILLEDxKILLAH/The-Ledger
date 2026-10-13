@@ -4,10 +4,10 @@ name: SillyTavern Android APK
 # the same app on an x86_64 emulator, then publishes the APK as a GitHub Release so
 # it can be downloaded straight to the phone.
 #
-# Optional signing secrets (set once so every build installs over the previous one
-# and keeps your chats): ST_KEYSTORE_BASE64, ST_KEYSTORE_PASSWORD. The key alias is
-# "st" and the key password equals the store password. Without them each run is
-# signed with a throwaway key and updating means uninstalling first.
+# Signing: android/sillytavern/signing/release.p12.enc is the app's permanent key,
+# encrypted; the repository secret ST_KEYSTORE_PASSWORD decrypts it. Releases are
+# only published when the APK carries that key (checked against
+# signing/release-cert.sha256), so every release installs over the last one.
 
 on:
   push:
@@ -66,18 +66,18 @@ jobs:
       - name: Signing key
         if: matrix.task == 'assembleRelease'
         env:
-          KS_B64: ${{ secrets.ST_KEYSTORE_BASE64 }}
           KS_PASS: ${{ secrets.ST_KEYSTORE_PASSWORD }}
         run: |
-          ks="$RUNNER_TEMP/st.jks"
-          if [ -n "$KS_B64" ]; then
-            echo "$KS_B64" | base64 -d > "$ks"
+          ks="$RUNNER_TEMP/st.p12"
+          if [ -n "$KS_PASS" ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 600000 -in "$PROJECT/signing/release.p12.enc" -out "$ks" -pass env:KS_PASS
           else
-            echo "::warning::No ST_KEYSTORE_BASE64 secret; signing with a throwaway key. Uninstall the old APK before installing this one."
+            echo "::warning::No ST_KEYSTORE_PASSWORD secret: signing with a throwaway key. This build will not be released."
             KS_PASS=throwaway
-            keytool -genkeypair -keystore "$ks" -storepass "$KS_PASS" -keypass "$KS_PASS" -alias st \
-              -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=SillyTavern Pocket"
+            keytool -genkeypair -keystore "$ks" -storetype PKCS12 -storepass "$KS_PASS" -keypass "$KS_PASS" -alias st \
+              -keyalg RSA -keysize 2048 -validity 1 -dname "CN=Throwaway"
           fi
+          echo "::add-mask::$KS_PASS"
           {
             echo "ST_KEYSTORE_FILE=$ks"
             echo "ST_KEYSTORE_PASSWORD=$KS_PASS"
@@ -92,7 +92,7 @@ jobs:
             -PstAbi=${{ matrix.abi }} -PstVersion="$ST_REF" -PstVersionCode=${{ github.run_number }}
           apk=$(find app/build/outputs/apk -name '*.apk' | head -1)
           mkdir -p "$GITHUB_WORKSPACE/out"
-          cp "$apk" "$GITHUB_WORKSPACE/out/SillyTavern-$ST_REF-${{ matrix.abi }}.apk"
+          cp "$apk" "$GITHUB_WORKSPACE/out/LedgerTavern-$ST_REF-${{ matrix.abi }}.apk"
           ls -la "$GITHUB_WORKSPACE/out"
 
       - uses: actions/upload-artifact@v4
@@ -141,20 +141,43 @@ jobs:
     needs: [build, emulator-test]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: android/sillytavern/signing
+
       - uses: actions/download-artifact@v4
         with:
           name: apk-arm64-v8a
           path: out
 
+      - name: Check the APK carries the permanent key
+        id: sig
+        run: |
+          apksigner=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          got=$("$apksigner" verify --print-certs out/*.apk | sed -n 's/^Signer #1 certificate SHA-256 digest: //p')
+          want=$(tr -d '[:space:]' < "$PROJECT/signing/release-cert.sha256")
+          echo "APK certificate: $got"
+          if [ "$got" = "$want" ]; then
+            echo "permanent=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "permanent=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::APK is not signed with the permanent key (add the ST_KEYSTORE_PASSWORD secret). Not publishing a release; the APK is in this run's artifacts."
+          fi
+
       - uses: softprops/action-gh-release@v2
+        if: steps.sig.outputs.permanent == 'true'
         with:
-          tag_name: sillytavern-android-${{ github.run_number }}
-          name: SillyTavern ${{ env.ST_REF }} for Android (build ${{ github.run_number }})
+          tag_name: ledger-tavern-${{ github.run_number }}
+          name: Ledger Tavern ${{ env.ST_REF }} (build ${{ github.run_number }})
           target_commitish: ${{ github.sha }}
-          prerelease: true
+          prerelease: false
+          make_latest: true
           files: out/*.apk
           body: |
-            SillyTavern ${{ env.ST_REF }} packaged as a standalone Android app, built for the Pixel 9 Pro (arm64-v8a, Android 14+).
-            Download the APK on your phone and open it to install (allow "Install unknown apps" for your browser when asked).
+            SillyTavern ${{ env.ST_REF }} as a standalone Android app in The Ledger's look, with the Plugin Ledger browser. Built for the Pixel 9 Pro (arm64-v8a, Android 14+).
 
-            SillyTavern is AGPL-3.0: source at https://github.com/SillyTavern/SillyTavern/tree/${{ env.ST_REF }}; wrapper source in android/sillytavern of this repository.
+            **Install:** download the APK on your phone and open it (allow "Install unknown apps" for your browser when asked). Builds from this one on are signed with the same permanent key, so later updates install over it and keep your chats.
+
+            Always the newest: https://github.com/${{ github.repository }}/releases/latest
+
+            SillyTavern is AGPL-3.0: source at https://github.com/SillyTavern/SillyTavern/tree/${{ env.ST_REF }}; the app's own source is in android/sillytavern of this repository.
