@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A speech bubble with three dots, kept inside the 66dp adaptive-icon safe zone. -->
+<!-- The Ledger's seal: a brass ring around an open, ruled ledger with an oxblood
+     ribbon. Kept inside the 66dp adaptive-icon safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="@color/icon_fg"
-        android:fillType="evenOdd"
-        android:pathData="M38,34 H70 A8,8 0 0 1 78,42 V60 A8,8 0 0 1 70,68 H50 L40,77 V68 H38 A8,8 0 0 1 30,60 V42 A8,8 0 0 1 38,34 Z M38,51 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 Z M50,51 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 Z M62,51 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0 Z" />
+    <!-- seal rings -->
+    <path android:strokeColor="@color/ledger_brass" android:strokeWidth="2.2"
+        android:pathData="M25,54 a29,29 0 1,0 58,0 a29,29 0 1,0 -58,0 Z" />
+    <path android:strokeColor="#59C6A15F" android:strokeWidth="0.9"
+        android:pathData="M29.5,54 a24.5,24.5 0 1,0 49,0 a24.5,24.5 0 1,0 -49,0 Z" />
+    <!-- pages -->
+    <path android:fillColor="@color/ledger_brass_2"
+        android:pathData="M36,43.5 C42,41 48,41 53,43.5 L53,67 C48,64.5 42,64.5 36,67 Z" />
+    <path android:fillColor="@color/ledger_brass_2"
+        android:pathData="M55,43.5 C60,41 66,41 72,43.5 L72,67 C66,64.5 60,64.5 55,67 Z" />
+    <!-- ruling -->
+    <path android:strokeColor="#8C14110D" android:strokeWidth="0.9" android:strokeLineCap="round"
+        android:pathData="M39.5,49 L49.5,48 M39.5,53 L49.5,52 M39.5,57 L49.5,56 M39.5,61 L46.5,60.4 M58.5,48 L68.5,49 M58.5,52 L68.5,53 M58.5,56 L68.5,57" />
+    <!-- ribbon -->
+    <path android:fillColor="@color/ledger_oxblood"
+        android:pathData="M64,42.4 L68,42.9 L68,62 L66,59.8 L64,62 Z" />
 </vector>

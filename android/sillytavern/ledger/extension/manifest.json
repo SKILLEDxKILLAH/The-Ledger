@@ -1,0 +1,11 @@
+{
+    "display_name": "The Plugin Ledger",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "The Ledger",
+    "version": "1.0.0",
+    "homePage": "https://github.com/SKILLEDxKILLAH/The-Ledger"
+}

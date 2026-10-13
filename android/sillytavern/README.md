@@ -1,7 +1,32 @@
-# SillyTavern for Android (Pixel 9 Pro)
+# Ledger Tavern: SillyTavern for Android (Pixel 9 Pro)
 
 A standalone Android app that runs the full [SillyTavern](https://github.com/SillyTavern/SillyTavern)
-server on the phone itself. No Termux, no PC, no second device needed.
+server on the phone itself, dressed in The Ledger's look. No Termux, no PC, no
+second device needed.
+
+## The Ledger look
+
+- **Theme.** New installs open in the *The Ledger* SillyTavern theme: oxblood,
+  brass and hunter green on ruled ledger paper, set in EB Garamond and Cormorant.
+  Chat messages read as ledger entries and panels as bound folios. You can switch
+  themes in User Settings as usual; the source is `ledger/public/ledger-theme.css`.
+- **The Plugin Ledger.** A compass icon in SillyTavern's top bar opens a small
+  browser for plugins (UI extensions), with:
+  - tabs, back/forward/reload and an address bar that takes a search,
+    `owner/repo` or any GitHub URL;
+  - the official SillyTavern catalogue (Featured, Tools, Entered filters), plus
+    a GitHub search for plugins that aren't catalogued;
+  - a page per plugin with its stars, last update, licence, manifest and
+    rendered readme;
+  - one-tap Install, plus Update and Remove for installed ("entered") plugins
+    and a Shelf for bookmarks.
+
+  The explorer is served by SillyTavern itself (`/ledger/explorer.html`), so it
+  uses the server's own extension API. Readmes are rendered through an
+  allow-list sanitiser, behind a strict Content Security Policy.
+- **Boot screen and icon.** A ledger seal, ruled ground and a brass progress bar
+  while the server starts. If startup fails, it shows the server's last log lines
+  and a Try again button.
 
 ## Install
 
@@ -9,7 +34,7 @@ server on the phone itself. No Termux, no PC, no second device needed.
    `SillyTavern-<version>-arm64-v8a.apk` (published by the
    `SillyTavern Android APK` workflow).
 2. Open it and allow "Install unknown apps" for your browser when asked.
-3. Launch **SillyTavern**. The first launch unpacks about 400 MB and compiles
+3. Launch **Ledger Tavern**. The first launch unpacks about 400 MB and compiles
    frontend assets, which takes around a minute. Later launches take a few seconds.
 
 ## How it works
@@ -34,6 +59,15 @@ server on the phone itself. No Termux, no PC, no second device needed.
 - Material You boot screen and a monochrome icon for Themed icons.
 - V8 heap raised to 4 GB (the phone has 16 GB) for long chats.
 - The foreground service keeps replies streaming while you switch apps.
+
+## Layout
+
+- `app/`: the Android shell (foreground service + WebView).
+- `ledger/`: The Ledger's additions. `public/` holds the theme CSS and plugin
+  explorer, `extension/` the built-in extension that adds the top-bar button,
+  `theme.json` the theme preset and `boot.html` the boot screen.
+- `scripts/apply-ledger.py`: installs `ledger/` into a SillyTavern checkout and
+  makes the theme the default for new users.
 
 ## Building
 

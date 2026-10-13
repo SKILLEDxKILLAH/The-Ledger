@@ -5,44 +5,42 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.Insets;
-import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.text.method.ScrollingMovementMethod;
 import android.util.Base64;
-import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.webkit.JavascriptInterface;
+import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.window.OnBackInvokedDispatcher;
+
+import org.json.JSONObject;
 
 import java.io.OutputStream;
 
 /**
- * Full-screen WebView onto the on-device SillyTavern server, with a native boot
- * screen while the server unpacks and starts.
+ * Full-screen WebView onto the on-device SillyTavern server. While the server
+ * unpacks and starts, the same WebView shows The Ledger's boot page
+ * (assets/boot.html), which this activity drives through bootState().
  */
 public class MainActivity extends Activity implements ServerService.Listener {
     private static final int REQ_FILE = 1;
     private static final int REQ_NOTIF = 2;
+    private static final String BOOT_URL = "file:///android_asset/boot.html";
 
     /**
      * SillyTavern saves files by clicking an <a download> pointing at a blob: URL,
@@ -62,27 +60,23 @@ public class MainActivity extends Activity implements ServerService.Listener {
             + "if(want(a)){e.preventDefault();e.stopPropagation();save(a);}},true);"
             + "})();";
 
-    private FrameLayout root;
     private WebView web;
-    private View boot;
-    private ProgressBar progress;
-    private TextView status;
-    private TextView log;
-    private Button retry;
-    private boolean loaded;
+    /** True once the tavern itself (not the boot page) has been asked to load. */
+    private boolean tavern;
+    private boolean clearHistoryOnLoad;
+    private ServerService.State lastState = ServerService.State.IDLE;
+    private String lastDetail = "";
+    private int lastPct = -1;
     private ValueCallback<Uri[]> fileCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        root = new FrameLayout(this);
-        root.setBackgroundColor(getColor(R.color.st_bg));
+        FrameLayout root = new FrameLayout(this);
+        root.setBackgroundColor(getColor(R.color.ledger_ground));
         web = buildWebView();
-        web.setVisibility(View.INVISIBLE);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
-        boot = buildBootScreen();
-        root.addView(boot, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
 
         // targetSdk 35 is always edge-to-edge: pad for the status bar, the camera
@@ -99,15 +93,20 @@ public class MainActivity extends Activity implements ServerService.Listener {
                     | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
         }
 
+        // Back: the page gets first refusal (it closes the plugin explorer), then
+        // WebView history, then the app goes to the background with the server alive.
         getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
-                OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> {
-                    if (loaded && web.canGoBack()) web.goBack();
-                    else moveTaskToBack(true); // keep the server and page alive
-                });
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT, () -> web.evaluateJavascript(
+                        "!!(window.ledgerHandleBack&&window.ledgerHandleBack())", handled -> {
+                            if ("true".equals(handled)) return;
+                            if (tavern && web.canGoBack()) web.goBack();
+                            else moveTaskToBack(true);
+                        }));
 
         if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
         }
+        web.loadUrl(BOOT_URL);
         startServer();
     }
 
@@ -150,76 +149,75 @@ public class MainActivity extends Activity implements ServerService.Listener {
 
     @Override
     public void onState(ServerService.State state, String detail, int pct) {
-        switch (state) {
-            case RUNNING:
-                if (!loaded) {
-                    loaded = true;
-                    web.loadUrl(ServerService.ORIGIN);
-                }
-                break;
-            case FAILED:
-                showBoot(detail, -1);
-                log.setText(ServerService.logTail());
-                log.setVisibility(View.VISIBLE);
-                retry.setVisibility(View.VISIBLE);
-                loaded = false;
-                break;
-            case IDLE:
-                break;
-            default:
-                showBoot(detail, pct);
-                log.setVisibility(View.GONE);
-                retry.setVisibility(View.GONE);
+        lastState = state;
+        lastDetail = detail;
+        lastPct = pct;
+        if (state == ServerService.State.RUNNING) {
+            if (!tavern) {
+                tavern = true;
+                clearHistoryOnLoad = true;
+                pushBootState(); // "The books are open." while the tavern loads
+                web.loadUrl(ServerService.ORIGIN);
+            }
+            return;
+        }
+        if (state == ServerService.State.IDLE) return;
+        if (tavern) {
+            // The server went away under the tavern: back to the boot page.
+            tavern = false;
+            web.loadUrl(BOOT_URL); // onPageFinished pushes the state
+        } else {
+            pushBootState();
         }
     }
 
-    private void showBoot(String text, int pct) {
-        boot.setVisibility(View.VISIBLE);
-        web.setVisibility(View.INVISIBLE);
-        status.setText(text);
-        progress.setIndeterminate(pct < 0);
-        if (pct >= 0) progress.setProgress(pct);
+    private void pushBootState() {
+        String js = "window.bootState&&bootState(" + JSONObject.quote(lastState.name()) + ","
+                + JSONObject.quote(lastDetail) + "," + lastPct + ","
+                + JSONObject.quote(lastState == ServerService.State.FAILED ? ServerService.logTail() : "") + ")";
+        web.evaluateJavascript(js, null);
     }
 
     // ---- WebView ------------------------------------------------------------------
 
+    private static boolean isLocal(Uri u) {
+        return "127.0.0.1".equals(u.getHost()) || "localhost".equals(u.getHost())
+                || ("file".equals(u.getScheme()) && u.getPath() != null && u.getPath().startsWith("/android_asset/"));
+    }
+
     private WebView buildWebView() {
         WebView w = new WebView(this);
-        w.setBackgroundColor(getColor(R.color.st_bg));
+        w.setBackgroundColor(getColor(R.color.ledger_ground));
         w.setOverScrollMode(View.OVER_SCROLL_NEVER);
         WebSettings s = w.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false); // TTS playback
-        s.setAllowFileAccess(false);
+        s.setAllowFileAccess(false); // android_asset (the boot page) still loads
         s.setAllowContentAccess(false);
         s.setTextZoom(100);
         s.setAlgorithmicDarkeningAllowed(false); // SillyTavern has its own themes
-        s.setCacheMode(WebSettings.LOAD_DEFAULT);
-        WebView.setWebContentsDebuggingEnabled(
-                (getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0);
+        WebView.setWebContentsDebuggingEnabled((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0);
         w.addJavascriptInterface(new Bridge(), "StPocket");
 
         w.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
-                Uri u = req.getUrl();
-                if ("127.0.0.1".equals(u.getHost()) || "localhost".equals(u.getHost())) return false;
-                // Everything else (docs, provider sign-ups, Discord...) opens in the browser.
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, u));
-                } catch (ActivityNotFoundException ignored) {
-                    // No handler for this scheme.
-                }
+                if (isLocal(req.getUrl())) return false;
+                openExternal(req.getUrl());
                 return true;
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
+                if (url.startsWith(BOOT_URL)) {
+                    pushBootState();
+                    return;
+                }
                 view.evaluateJavascript(DOWNLOAD_HOOK, null);
-                if (loaded) {
-                    view.setVisibility(View.VISIBLE);
-                    boot.setVisibility(View.GONE);
+                if (clearHistoryOnLoad) {
+                    clearHistoryOnLoad = false;
+                    view.clearHistory(); // so Back never returns to the boot page
                 }
             }
         });
@@ -241,12 +239,22 @@ public class MainActivity extends Activity implements ServerService.Listener {
 
         // Plain http downloads from the server (rare): fetch them through the same hook.
         w.setDownloadListener((url, ua, cd, mime, len) -> {
-            String name = android.webkit.URLUtil.guessFileName(url, cd, mime);
+            String name = URLUtil.guessFileName(url, cd, mime);
             w.evaluateJavascript("(function(){var a=document.createElement('a');a.href="
-                    + org.json.JSONObject.quote(url) + ";a.setAttribute('download',"
-                    + org.json.JSONObject.quote(name) + ");a.click();})();", null);
+                    + JSONObject.quote(url) + ";a.setAttribute('download',"
+                    + JSONObject.quote(name) + ");a.click();})();", null);
         });
         return w;
+    }
+
+    private void openExternal(Uri u) {
+        String scheme = u.getScheme();
+        if (!"https".equals(scheme) && !"http".equals(scheme) && !"mailto".equals(scheme)) return;
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, u));
+        } catch (ActivityNotFoundException ignored) {
+            // No handler for this link.
+        }
     }
 
     @Override
@@ -259,7 +267,7 @@ public class MainActivity extends Activity implements ServerService.Listener {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    /** Receives exported files (character cards, chats, backups) from the page. */
+    /** Page-to-app calls: exported files, the boot page's retry, and external links. */
     private final class Bridge {
         @JavascriptInterface
         public void save(String name, String mime, String base64) {
@@ -287,69 +295,15 @@ public class MainActivity extends Activity implements ServerService.Listener {
         public void toast(String msg) {
             runOnUiThread(() -> Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show());
         }
-    }
 
-    // ---- boot screen ----------------------------------------------------------------
+        @JavascriptInterface
+        public void retry() {
+            runOnUiThread(MainActivity.this::startServer);
+        }
 
-    private View buildBootScreen() {
-        // Material You: tinted from the wallpaper palette on Pixel.
-        int bg = getColor(android.R.color.system_neutral1_900);
-        int fg = getColor(android.R.color.system_neutral1_50);
-        int accent = getColor(android.R.color.system_accent1_200);
-        float dp = getResources().getDisplayMetrics().density;
-
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setGravity(Gravity.CENTER);
-        box.setBackgroundColor(bg);
-        int pad = (int) (24 * dp);
-        box.setPadding(pad, pad, pad, pad);
-
-        TextView title = new TextView(this);
-        title.setText(R.string.app_name);
-        title.setTextColor(fg);
-        title.setTextSize(28);
-        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        title.setGravity(Gravity.CENTER);
-        box.addView(title);
-
-        progress = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
-        progress.setMax(100);
-        progress.setIndeterminate(true);
-        progress.setProgressTintList(android.content.res.ColorStateList.valueOf(accent));
-        progress.setIndeterminateTintList(android.content.res.ColorStateList.valueOf(accent));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams((int) (220 * dp), -2);
-        lp.topMargin = (int) (24 * dp);
-        lp.bottomMargin = (int) (16 * dp);
-        box.addView(progress, lp);
-
-        status = new TextView(this);
-        status.setTextColor(fg);
-        status.setAlpha(0.8f);
-        status.setGravity(Gravity.CENTER);
-        status.setMaxLines(6);
-        box.addView(status);
-
-        log = new TextView(this);
-        log.setTextColor(fg);
-        log.setTypeface(Typeface.MONOSPACE);
-        log.setTextSize(11);
-        log.setBackgroundColor(Color.argb(60, 0, 0, 0));
-        log.setPadding(pad / 2, pad / 2, pad / 2, pad / 2);
-        log.setMovementMethod(new ScrollingMovementMethod());
-        log.setTextIsSelectable(true);
-        log.setVisibility(View.GONE);
-        LinearLayout.LayoutParams logLp = new LinearLayout.LayoutParams(-1, 0, 1f);
-        logLp.topMargin = (int) (16 * dp);
-        box.addView(log, logLp);
-
-        retry = new Button(this);
-        retry.setText(R.string.retry);
-        retry.setVisibility(View.GONE);
-        retry.setOnClickListener(v -> startServer());
-        LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-2, -2);
-        rlp.topMargin = (int) (16 * dp);
-        box.addView(retry, rlp);
-        return box;
+        @JavascriptInterface
+        public void openExternal(String url) {
+            runOnUiThread(() -> MainActivity.this.openExternal(Uri.parse(url)));
+        }
     }
 }

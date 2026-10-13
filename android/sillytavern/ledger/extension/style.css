@@ -1,0 +1,29 @@
+/* The Plugin Ledger host: top-bar button, overlay and reload bar.
+   Colours follow The Ledger (oxblood, brass, ruled ground). */
+#ledger-explorer-button .drawer-icon{color:#c6a15f}
+#ledger-explorer-button .drawer-icon:hover{color:#dcbd7f}
+
+/* Explicit box: SillyTavern's broad layout rules otherwise collapse the overlay. */
+body > #ledger-explorer{
+    position:fixed!important; top:0!important; left:0!important; right:0!important; bottom:0!important;
+    width:100vw!important; height:100dvh!important; max-height:none!important; margin:0!important; padding:0!important;
+    z-index:10000;
+    background:#14110d;
+    opacity:0; transform:translateY(14px);
+    transition:opacity .2s ease, transform .2s ease;
+}
+body > #ledger-explorer.on{opacity:1; transform:none}
+#ledger-explorer iframe{width:100%!important; height:100%!important; border:0; display:block; background:#14110d}
+body.ledger-explorer-open{overflow:hidden}
+
+#ledger-reload-bar{
+    position:fixed; z-index:9999; left:50%; transform:translateX(-50%);
+    top:calc(var(--topBarBlockSize, 50px) + 10px);
+    display:flex; align-items:center; gap:10px; max-width:min(94vw,560px);
+    padding:8px 8px 8px 14px; border-radius:8px;
+    background:#231e17; color:#ece2ce; border:1px solid rgba(198,161,95,.38); border-left:3px solid #9a2d33;
+    box-shadow:0 18px 40px -20px rgba(0,0,0,.9);
+    font-size:calc(var(--mainFontSize) * .92);
+}
+#ledger-reload-bar .menu_button{margin:0; white-space:nowrap}
+#ledger-reload-bar .ledger-later{background:none; border:0; color:#877c64; font-size:1.3em; cursor:pointer; padding:0 6px}

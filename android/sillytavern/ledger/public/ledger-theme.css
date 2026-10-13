@@ -1,0 +1,199 @@
+/* ============================================================= *
+ * THE LEDGER — SillyTavern theme                                *
+ * Dark academia x old-money. Oxblood + brass + hunter green.    *
+ * Loaded by the "The Ledger" theme preset via @import; colours  *
+ * that SillyTavern exposes as theme sliders live in the preset. *
+ * ============================================================= */
+
+@font-face{font-family:"EB Garamond Ledger"; font-style:normal; font-weight:400 800; font-display:swap;
+  src:url("/ledger/fonts/eb-garamond-latin-wght-normal.woff2") format("woff2")}
+@font-face{font-family:"EB Garamond Ledger"; font-style:italic; font-weight:400 800; font-display:swap;
+  src:url("/ledger/fonts/eb-garamond-latin-wght-italic.woff2") format("woff2")}
+@font-face{font-family:"Cormorant Ledger"; font-style:normal; font-weight:600; font-display:swap;
+  src:url("/ledger/fonts/cormorant-garamond-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"Cormorant Ledger"; font-style:italic; font-weight:500; font-display:swap;
+  src:url("/ledger/fonts/cormorant-garamond-latin-500-italic.woff2") format("woff2")}
+
+:root{
+  --ground:#14110d; --ground-2:#1b1712; --ground-3:#231e17; --ground-4:#2b251c;
+  --ink:#ece2ce; --ink-soft:#b8ac93; --ink-faint:#877c64;
+  --line:rgba(198,161,95,.20); --line-2:rgba(198,161,95,.38);
+  --oxblood:#9a2d33; --oxblood-2:#b23a40; --on-oxblood:#f4e7d6;
+  --brass:#c6a15f; --brass-2:#dcbd7f; --brass-deep:#a9843f;
+  --green:#5c7d62; --green-soft:#26382b;
+  --danger:#c14d44;
+  --ledger-serif:"Cormorant Ledger","EB Garamond Ledger",Georgia,serif;
+
+  --mainFontFamily:"EB Garamond Ledger","Noto Serif",Georgia,serif;
+  --mainFontSize:calc(var(--fontScale) * 16.5px);
+  --interactable-outline-color:var(--brass);
+  --interactable-outline-color-faint:var(--line-2);
+  --golden:var(--brass-2);
+  --active:#7fa585;
+  --crimson70a:rgba(154,45,51,.75);
+  --crimson-hover:rgba(178,58,64,.55);
+}
+
+/* ---------- Ground: ruled ledger paper under a brass lamp-glow ---------- */
+body{background-color:var(--ground)}
+#bg1,#bg_custom{
+  background-color:var(--ground)!important;
+  background-image:
+    radial-gradient(120% 70% at 50% -10%, rgba(198,161,95,.09), transparent 60%),
+    radial-gradient(90% 60% at 50% 120%, rgba(154,45,51,.10), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 27px, rgba(198,161,95,.075) 27px 28px)!important;
+  background-size:auto!important;
+  filter:none!important;
+}
+::selection{background:rgba(154,45,51,.55); color:var(--on-oxblood)}
+
+/* ---------- Masthead (top bar) ---------- */
+#top-bar{
+  background:linear-gradient(180deg, rgba(27,23,18,.97), rgba(20,17,13,.94))!important;
+  border-bottom:1px solid var(--line-2);
+  box-shadow:0 10px 30px -18px rgba(0,0,0,.9);
+}
+#top-bar::after{content:""; position:absolute; left:0; right:0; bottom:-4px; height:1px;
+  background:linear-gradient(90deg,transparent,var(--line),transparent); pointer-events:none}
+.drawer-icon{color:var(--ink-faint); transition:color .16s ease, transform .16s ease}
+.drawer-icon:hover{color:var(--brass-2)}
+.drawer-icon.openIcon{color:var(--brass); text-shadow:0 0 12px rgba(198,161,95,.35)}
+
+/* ---------- Panels (drawers, popups) as bound folios ---------- */
+.drawer-content,#right-nav-panel,#left-nav-panel,#floatingPrompt,#cfgConfig,.popup,dialog.popup,#character_popup,.zoomed_avatar{
+  background:
+    linear-gradient(180deg, rgba(198,161,95,.05), transparent 120px),
+    var(--ground-2)!important;
+  border:1px solid var(--line-2)!important;
+  box-shadow:0 18px 50px -20px rgba(0,0,0,.85), inset 0 0 0 1px rgba(198,161,95,.06)!important;
+}
+.drawer-content{border-top:0!important}
+.popup .popup-body{background:transparent}
+
+h1,h2,h3,h4,.standoutHeader,#rm_button_selected_ch h2,.inline-drawer-header b,.inline-drawer-header strong,
+.ch_name,.extension_name,.popup h3{
+  font-family:var(--ledger-serif); font-weight:600; letter-spacing:.02em;
+}
+h3,h4{color:var(--brass-2)}
+.inline-drawer-header{
+  border-bottom:1px solid var(--line); padding-bottom:4px;
+}
+.inline-drawer-icon{color:var(--brass)}
+hr,.sysHR{border:0!important; height:1px!important; background:linear-gradient(90deg,transparent,var(--line-2),transparent)!important}
+
+/* ---------- Buttons: The Ledger's .btn ---------- */
+.menu_button,.menu_button_icon,.ledger-btn{
+  background:var(--ground-3)!important;
+  color:var(--ink)!important;
+  border:1px solid var(--line-2)!important;
+  border-radius:4px!important;
+  font-family:var(--mainFontFamily);
+  letter-spacing:.02em;
+  transition:border-color .16s ease, color .16s ease, transform .16s ease, filter .16s ease;
+}
+.menu_button:hover,.menu_button_icon:hover{border-color:var(--brass)!important; color:var(--brass-2)!important}
+.menu_button.active,.menu_button.toggleEnabled,.menu_button.redOverlayGlow{
+  background:linear-gradient(180deg,var(--oxblood-2),var(--oxblood))!important;
+  border-color:color-mix(in srgb,var(--oxblood) 60%,var(--brass))!important;
+  color:var(--on-oxblood)!important;
+}
+.right_menu_button,.mes_button,.extraMesButtons>div,.mes_edit_buttons>div{color:var(--ink-faint)}
+.right_menu_button:hover,.mes_button:hover{color:var(--brass-2)}
+
+/* ---------- Fields ---------- */
+.text_pole,input[type=text],input[type=search],input[type=number],input[type=password],textarea,select{
+  background-color:var(--ground)!important;
+  color:var(--ink)!important;
+  border:1px solid var(--line-2)!important;
+  border-radius:4px!important;
+}
+.text_pole:focus,input:focus,textarea:focus,select:focus{
+  outline:none!important; border-color:var(--brass)!important;
+  box-shadow:0 0 0 3px rgba(198,161,95,.16)!important;
+}
+input[type=checkbox]{accent-color:var(--oxblood)}
+input[type=range]{accent-color:var(--brass)}
+.select2-container .select2-selection,.select2-dropdown{background:var(--ground)!important; border-color:var(--line-2)!important}
+.select2-results__option--highlighted{background:rgba(154,45,51,.55)!important}
+
+/* ---------- The chat as ledger entries ---------- */
+#chat{background:transparent!important}
+.mes{
+  border-radius:0!important;
+  border:0!important;
+  border-bottom:1px solid var(--line)!important;
+  padding-top:12px!important; padding-bottom:12px!important;
+}
+.mes[is_user="true"]{
+  background:linear-gradient(90deg, rgba(154,45,51,.13), transparent 70%)!important;
+  box-shadow:inset 2px 0 0 var(--oxblood);
+}
+.mes[is_user="false"]{
+  background:linear-gradient(90deg, rgba(198,161,95,.06), transparent 70%)!important;
+  box-shadow:inset 2px 0 0 var(--brass-deep);
+}
+.mes[is_system="true"]{opacity:.9}
+.mes .name_text,.ch_name .name_text{
+  font-family:var(--ledger-serif)!important; font-weight:600!important;
+  font-size:1.12em; letter-spacing:.04em; color:var(--brass-2)!important;
+}
+.mes[is_user="true"] .name_text{color:#e7a3a0!important}
+.mes .timestamp,.mes .mesIDDisplay,.mes .mes_timer,.tokenCounterDisplay{
+  font-family:var(--ledger-serif); font-style:italic; color:var(--ink-faint)!important; opacity:1!important;
+}
+.mes_text{line-height:1.6}
+.mes_text blockquote{border-left:2px solid var(--brass-deep); margin-left:0; padding-left:12px; color:var(--ink-soft)}
+.mes_text code,.mes_text pre{background:var(--ground)!important; border:1px solid var(--line)!important; border-radius:4px}
+.mes_text hr{background:linear-gradient(90deg,transparent,var(--line-2),transparent)!important}
+.avatar img,.mesAvatarWrapper .avatar img{
+  border:1px solid var(--brass-deep);
+  box-shadow:inset 0 0 0 3px rgba(198,161,95,.14), 0 4px 14px -6px rgba(0,0,0,.8);
+}
+.swipe_left,.swipe_right,.swipes-counter{color:var(--brass)!important}
+.last_mes .mes_block{position:relative}
+
+/* ---------- Composer ---------- */
+#send_form{
+  background:linear-gradient(180deg, rgba(35,30,23,.96), rgba(27,23,18,.97))!important;
+  border:1px solid var(--line-2)!important;
+  box-shadow:0 -10px 30px -22px rgba(0,0,0,.9);
+}
+#send_textarea{
+  font-family:var(--mainFontFamily)!important;
+  background:transparent!important; border:0!important; box-shadow:none!important;
+}
+#send_but,#mes_continue,#mes_impersonate{color:var(--brass)!important}
+#send_but:hover{color:var(--brass-2)!important}
+#mes_stop{color:var(--danger)!important}
+#leftSendForm>div,#rightSendForm>div{color:var(--ink-faint)}
+
+/* ---------- Character list as an index of accounts ---------- */
+.character_select,.group_select,.bogus_folder_select{
+  border-bottom:1px solid var(--line); border-radius:0!important;
+}
+.character_select.selected,.character_select:hover,.group_select:hover{
+  background:linear-gradient(90deg, rgba(154,45,51,.22), transparent 85%)!important;
+}
+.ch_description,.ch_additional_info{color:var(--ink-soft)!important; font-style:italic}
+.tag{
+  background:transparent!important; border:1px solid var(--line-2)!important;
+  color:var(--brass-2)!important; font-family:var(--ledger-serif); letter-spacing:.06em;
+}
+.tag.selected{background:rgba(92,125,98,.35)!important; border-color:var(--green)!important}
+
+/* ---------- Toasts and menus ---------- */
+#toast-container>div{
+  background-color:var(--ground-3)!important; color:var(--ink)!important;
+  border:1px solid var(--line-2)!important; border-left:3px solid var(--brass)!important;
+  box-shadow:0 18px 40px -20px rgba(0,0,0,.9)!important; opacity:1!important;
+}
+#toast-container>.toast-error{border-left-color:var(--danger)!important}
+#toast-container>.toast-success{border-left-color:var(--green)!important}
+.list-group,.options-content,#extensionsMenu{
+  background:var(--ground-2)!important; border:1px solid var(--line-2)!important;
+}
+.list-group-item:hover,.options-content a:hover,#extensionsMenu>div:hover{background:rgba(154,45,51,.25)!important}
+
+/* ---------- Scrollbars ---------- */
+*{scrollbar-color:var(--brass-deep) transparent}
+::-webkit-scrollbar-thumb{background-color:var(--brass-deep)!important; border-radius:6px}
