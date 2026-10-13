@@ -314,6 +314,99 @@ function resetGuide() {
     document.getElementById('ledger-guide')?.scrollIntoView({ behavior: 'smooth' });
 }
 
+// ---- characters panel ------------------------------------------------------------
+// A search field that is always visible, labelled actions instead of four bare
+// icons, sorting/tags/pages folded into "Sort & filter", a count, and an empty
+// state. Every control drives SillyTavern's own element, so behaviour is unchanged.
+
+const CHAR_ACTIONS = [
+    { target: 'rm_button_create', label: 'New', icon: 'fa-user-plus' },
+    { target: 'character_import_button', label: 'Import', icon: 'fa-file-import' },
+    { target: 'external_import_button', label: 'From URL', icon: 'fa-cloud-arrow-down' },
+    { target: 'rm_button_group_chats', label: 'Group chat', icon: 'fa-users' },
+];
+
+function buildCharacterTools() {
+    const block = document.getElementById('rm_characters_block');
+    if (!block || document.getElementById('ledger-chars')) return !!block;
+    const tools = document.createElement('div');
+    tools.id = 'ledger-chars';
+    tools.innerHTML = `
+        <label class="lc-search"><i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" id="lc-query" placeholder="Search characters" autocomplete="off" enterkeyhint="search"></label>
+        <div class="lc-actions">${CHAR_ACTIONS.map((a) => `<button type="button" class="lc-pill" data-target="${a.target}"><i class="fa-solid ${a.icon}"></i>${a.label}</button>`).join('')}</div>
+        <div class="lc-meta"><span id="lc-count"></span>
+            <button type="button" class="lc-filter" id="lc-filter"><i class="fa-solid fa-sliders"></i>Sort &amp; filter</button></div>
+        <div class="lc-empty" id="lc-empty" hidden>
+            <div class="lc-empty-seal"><i class="fa-solid fa-address-card"></i></div>
+            <b>No characters yet</b>
+            <small>Import a card (PNG or JSON) from The Ledger, JanitorAI or Chub, or create one from scratch.</small>
+            <div class="lc-actions"><button type="button" class="lc-pill lc-primary" data-target="character_import_button"><i class="fa-solid fa-file-import"></i>Import a card</button>
+            <button type="button" class="lc-pill" data-target="rm_button_create"><i class="fa-solid fa-user-plus"></i>Create</button></div>
+        </div>`;
+    block.prepend(tools);
+
+    const stSearch = () => document.getElementById('character_search_bar');
+    tools.querySelector('#lc-query').addEventListener('input', (e) => {
+        const bar = stSearch();
+        if (!bar) return;
+        bar.value = e.target.value;
+        bar.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    tools.addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-target]');
+        if (pill) document.getElementById(pill.dataset.target)?.click();
+        if (e.target.closest('#lc-filter')) {
+            document.body.classList.toggle('ledger-chars-filters');
+            tools.querySelector('#lc-filter').classList.toggle('on', document.body.classList.contains('ledger-chars-filters'));
+        }
+    });
+
+    // The "list" icon is how you get back from a character to the list: say so.
+    const back = document.getElementById('rm_button_characters');
+    if (back) back.setAttribute('data-ledger-label', 'All characters');
+
+    // "Chat with …": after picking a character the chat is hidden behind this panel.
+    const go = document.createElement('button');
+    go.type = 'button';
+    go.id = 'lc-chat';
+    go.addEventListener('click', () => closePanel());
+    document.getElementById('right-nav-panel')?.append(go);
+
+    const list = document.getElementById('rm_print_characters_block');
+    if (list) new MutationObserver(syncCharacterTools).observe(list, { childList: true });
+    // SillyTavern swaps list/editor views by toggling inline display styles.
+    for (const id of ['rm_characters_block', 'rm_ch_create_block', 'rm_group_chats_block']) {
+        const el = document.getElementById(id);
+        if (el) new MutationObserver(syncCharacterTools).observe(el, { attributes: true, attributeFilter: ['style'] });
+    }
+    syncCharacterTools();
+    return true;
+}
+
+function syncCharacterTools() {
+    const list = document.getElementById('rm_print_characters_block');
+    const count = document.getElementById('lc-count');
+    if (!list || !count) return;
+    const n = list.querySelectorAll('.character_select, .group_select').length;
+    const searching = !!document.getElementById('lc-query')?.value;
+    count.textContent = n === 1 ? '1 character' : `${n} characters`;
+    const empty = n === 0 && !searching;
+    document.getElementById('lc-empty').hidden = !empty;
+    document.body.classList.toggle('ledger-chars-empty', empty);
+
+    const shown = (id) => { const el = document.getElementById(id); return !!el && getComputedStyle(el).display !== 'none'; };
+    const onList = shown('rm_characters_block');
+    document.body.classList.toggle('ledger-chars-list', onList);
+    const c = ctx();
+    const go = document.getElementById('lc-chat');
+    const editing = shown('rm_ch_create_block') && c?.characterId !== undefined && !!c?.name2;
+    if (go) {
+        go.hidden = !editing;
+        if (editing) go.innerHTML = `<i class="fa-solid fa-comment"></i>Chat with ${esc(c.name2)}<i class="fa-solid fa-arrow-right"></i>`;
+    }
+}
+
 // ---- wiring ------------------------------------------------------------------
 
 function applyMode() {
@@ -323,6 +416,7 @@ function applyMode() {
 
 function bootShell() {
     if (!buildHeader()) return false;
+    buildCharacterTools();
     applyMode();
     MOBILE.addEventListener('change', applyMode);
     const c = ctx();

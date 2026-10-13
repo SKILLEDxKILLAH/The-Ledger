@@ -1,0 +1,266 @@
+{
+ "note": "Popular SillyTavern UI extensions that are not in the official catalogue. Each was checked to have a manifest.json at its default branch root. Star counts as of 2026-10-13.",
+ "items": [
+  {
+   "id": "rpg-companion-sillytavern",
+   "type": "extension",
+   "name": "RPG Companion",
+   "description": "Track characters, quests, inventory and game state with AI-generated content",
+   "url": "https://github.com/SpicyMarinara/rpg-companion-sillytavern",
+   "stars": 321,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-Horae",
+   "type": "extension",
+   "name": "Horae",
+   "description": "Memory enhancement: keeps long chats coherent",
+   "url": "https://github.com/SenriYuki/SillyTavern-Horae",
+   "stars": 200,
+   "community": true
+  },
+  {
+   "id": "st-stepped-thinking",
+   "type": "extension",
+   "name": "Stepped Thinking",
+   "description": "Lets characters think before responding",
+   "url": "https://github.com/cierru/st-stepped-thinking",
+   "stars": 172,
+   "community": true
+  },
+  {
+   "id": "Extension-Summaryception",
+   "type": "extension",
+   "name": "Summaryception",
+   "description": "Layered memory summaries for long roleplays",
+   "url": "https://github.com/Lodactio/Extension-Summaryception",
+   "stars": 170,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-CharacterLibrary",
+   "type": "extension",
+   "name": "Character Library",
+   "description": "Discover, organize and manage your character library",
+   "url": "https://github.com/Sillyanonymous/SillyTavern-CharacterLibrary",
+   "stars": 147,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-Pathweaver",
+   "type": "extension",
+   "name": "Pathweaver",
+   "description": "AI story suggestions that turn roleplay into an adventure",
+   "url": "https://github.com/mattjaybe/SillyTavern-Pathweaver",
+   "stars": 119,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-EchoChamber",
+   "type": "extension",
+   "name": "EchoChamber",
+   "description": "AI \"audience\" reactions (Discord, Twitch, MST3K...) under the chat",
+   "url": "https://github.com/mattjaybe/SillyTavern-EchoChamber",
+   "stars": 102,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-MCP-Client",
+   "type": "extension",
+   "name": "MCP Client",
+   "description": "Connect MCP tool servers to SillyTavern",
+   "url": "https://github.com/bmen25124/SillyTavern-MCP-Client",
+   "stars": 97,
+   "community": true
+  },
+  {
+   "id": "NemoPresetExt",
+   "type": "extension",
+   "name": "NemoPresetExt",
+   "description": "Collapsible drop-downs for Chat Completion presets",
+   "url": "https://github.com/NemoVonNirgend/NemoPresetExt",
+   "stars": 94,
+   "community": true
+  },
+  {
+   "id": "sillytavern-DeepLore",
+   "type": "extension",
+   "name": "DeepLore (Obsidian required)",
+   "description": "AI-powered lorebook engine for SillyTavern. It retrieves relevant lore from your Obsidian vault using keyword matching and AI search, then injects it into context automatically.",
+   "url": "https://github.com/pixelnull/sillytavern-DeepLore",
+   "stars": 88,
+   "community": true
+  },
+  {
+   "id": "ST-Copilot",
+   "type": "extension",
+   "name": "Copilot (ST)",
+   "description": "A meta-assistant that helps you run SillyTavern",
+   "url": "https://github.com/Supker/ST-Copilot",
+   "stars": 79,
+   "community": true
+  },
+  {
+   "id": "sillytavern-character-memory",
+   "type": "extension",
+   "name": "CharMemory",
+   "description": "Extracts character memories into the Data Bank",
+   "url": "https://github.com/bal-spec/sillytavern-character-memory",
+   "stars": 73,
+   "community": true
+  },
+  {
+   "id": "Smart-Memory",
+   "type": "extension",
+   "name": "Smart Memory",
+   "description": "A SillyTavern extension providing a multi-tier memory and narrative context system for AI roleplay. Tracks character facts, relationship history, per-character knowledge and secrets, entity state, scene history, story arcs, and rolling summaries - extracted automatically so your AI stays coherent no matter how long the story runs.",
+   "url": "https://github.com/senjinthedragon/Smart-Memory",
+   "stars": 64,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-ReMemory",
+   "type": "extension",
+   "name": "ReMemory",
+   "description": "Memory books from chat highlights",
+   "url": "https://github.com/InspectorCaracal/SillyTavern-ReMemory",
+   "stars": 61,
+   "community": true
+  },
+  {
+   "id": "recast-post-processing",
+   "type": "extension",
+   "name": "Recast",
+   "description": "Prose post-processing of replies",
+   "url": "https://github.com/closuretxt/recast-post-processing",
+   "stars": 59,
+   "community": true
+  },
+  {
+   "id": "InlineSummary",
+   "type": "extension",
+   "name": "InlineSummary",
+   "description": "Summaries inline in the chat",
+   "url": "https://github.com/Kristyku/InlineSummary",
+   "stars": 57,
+   "community": true
+  },
+  {
+   "id": "Dooms-Enhancement-Suite",
+   "type": "extension",
+   "name": "Doom's Enhancement Suite",
+   "description": "An immersive RPG enhancement extension for SillyTavern — character tracking, lore library, TTS highlighting, portrait bar, scene headers, chat bubbles, weather effects, and more.",
+   "url": "https://github.com/DangerDaza/Dooms-Enhancement-Suite",
+   "stars": 57,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-WeatherPack",
+   "type": "extension",
+   "name": "WeatherPack",
+   "description": "Fixes broken markdown; HTML/JS helpers",
+   "url": "https://github.com/bmen25124/SillyTavern-WeatherPack",
+   "stars": 52,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-EchoText",
+   "type": "extension",
+   "name": "EchoText",
+   "description": "Text characters directly, phone-style",
+   "url": "https://github.com/mattjaybe/SillyTavern-EchoText",
+   "stars": 48,
+   "community": true
+  },
+  {
+   "id": "KimiThinkingPrefill",
+   "type": "extension",
+   "name": "Kimi Thinking Prefill",
+   "description": "SillyTavern extension: client-side reasoning_content thinking prefill for Kimi/Moonshot models (kimi-k3-jb patch equivalent, no server modifications)",
+   "url": "https://github.com/Rurijian/KimiThinkingPrefill",
+   "stars": 31,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-CharacterTools",
+   "type": "extension",
+   "name": "Character Tools",
+   "description": "SillyTavern extension for analyzing and improving character cards",
+   "url": "https://github.com/Inktomi93/SillyTavern-CharacterTools",
+   "stars": 25,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-ScenePulse",
+   "type": "extension",
+   "name": "ScenePulse",
+   "description": "AI-powered scene intelligence extension for SillyTavern — tracks characters, relationships, quests, mood, and more in a real-time dashboard",
+   "url": "https://github.com/xenofei/SillyTavern-ScenePulse",
+   "stars": 22,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-CharCardStudio",
+   "type": "extension",
+   "name": "Character Card Studio",
+   "description": "SillyTavern extension to create Character Cards and Lore entires using AI",
+   "url": "https://github.com/MMKAVERAPPA/SillyTavern-CharCardStudio",
+   "stars": 20,
+   "community": true
+  },
+  {
+   "id": "BlazeTracker",
+   "type": "extension",
+   "name": "BlazeTracker",
+   "description": "A SillyTavern extension that uses LLM analysis to track and maintain scene state across roleplay conversations. Helps AI models stay consistent with physical positions, outfits, time of day, mood, and narrative tension.",
+   "url": "https://github.com/lunarblazepony/BlazeTracker",
+   "stars": 13,
+   "community": true
+  },
+  {
+   "id": "ST---ThreadKeeper",
+   "type": "extension",
+   "name": "ThreadKeeper",
+   "description": "LLM-powered memory for long roleplays, keep facts for a fraction of the cost.",
+   "url": "https://github.com/selinawynters-ops/ST---ThreadKeeper",
+   "stars": 13,
+   "community": true
+  },
+  {
+   "id": "SillyTavern-Lorebook-Studio",
+   "type": "extension",
+   "name": "Lorebook Studio",
+   "description": "Visual 3D node-graph lorebook editor for SillyTavern — organize entries with categories, tags, and workflow tracking.",
+   "url": "https://github.com/hype-hosting/SillyTavern-Lorebook-Studio",
+   "stars": 12,
+   "community": true
+  },
+  {
+   "id": "ace-entry-track",
+   "type": "extension",
+   "name": "ACE Entry Track",
+   "description": "Lightweight World Info tracker for SillyTavern — live entries, keyword matches, token budget, diff tracking.",
+   "url": "https://github.com/aceeenvw/ace-entry-track",
+   "stars": 11,
+   "community": true
+  },
+  {
+   "id": "StatefulLore",
+   "type": "extension",
+   "name": "StatefulLore",
+   "description": "SillyTavern extension that replaces the built-in lorebook with a stateful, code-driven lore engine.",
+   "url": "https://github.com/cgstever/StatefulLore",
+   "stars": 11,
+   "community": true
+  },
+  {
+   "id": "notsosillynotsoimages",
+   "type": "extension",
+   "name": "Inline Image Generation",
+   "description": "Inline image generation for SillyTavern. Images appear right inside chat messages. No separate panel. No workflow interruption.",
+   "url": "https://github.com/aceeenvw/notsosillynotsoimages",
+   "stars": 10,
+   "community": true
+  }
+ ]
+}

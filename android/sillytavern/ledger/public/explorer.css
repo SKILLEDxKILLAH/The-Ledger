@@ -21,7 +21,7 @@
   --danger:#c14d44; --danger-soft:#3a201d;
   --shadow:0 18px 50px -20px rgba(0,0,0,.75);
   --shadow-sm:0 8px 24px -14px rgba(0,0,0,.7);
-  --radius:4px; --radius-lg:8px;
+  --radius:10px; --radius-lg:16px;
   --serif:"Cormorant Ledger","EB Garamond Ledger",Georgia,serif;
   --body:"EB Garamond Ledger","Noto Serif",Georgia,serif;
   --mono:"Noto Sans Mono",ui-monospace,"DejaVu Sans Mono",monospace;
@@ -151,8 +151,9 @@ main{max-width:860px; margin:0 auto; padding:18px 16px calc(var(--dock-h) + 40px
 .entry .ds{grid-column:2 / 4; color:var(--ink-soft); font-size:.95rem; margin-top:4px;
   display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden}
 .entry .side{display:flex; flex-direction:column; align-items:flex-end; gap:6px}
-.ribbon{font-family:var(--serif); font-size:.66rem; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); border:1px solid var(--line-2); padding:2px 7px; border-radius:2px}
-.ribbon.tool{color:#9fc0a4; border-color:color-mix(in srgb,var(--green) 70%,transparent)}
+.ribbon{font-family:var(--serif); font-size:.66rem; letter-spacing:.2em; text-transform:uppercase; color:var(--brass); background:rgba(198,161,95,.08); padding:2px 9px; border-radius:999px}
+.ribbon.community{color:#e7c98f; letter-spacing:.06em}
+.ribbon.tool{color:#9fc0a4; background:rgba(92,125,98,.18)}
 
 /* the "entered" stamp marks installed plugins */
 .stamp{
@@ -170,7 +171,7 @@ main{max-width:860px; margin:0 auto; padding:18px 16px calc(var(--dock-h) + 40px
 }
 .btn:hover{border-color:var(--brass); color:var(--brass-2)}
 .btn:active{transform:translateY(1px)}
-.btn.small{padding:6px 11px; font-size:.84rem}
+.btn.small{padding:6px 14px; font-size:.84rem; border-radius:999px}
 .btn.ghost{background:transparent}
 .btn.primary{background:linear-gradient(180deg,var(--oxblood-2),var(--oxblood)); border-color:color-mix(in srgb,var(--oxblood) 60%,var(--brass)); color:var(--on-oxblood); box-shadow:var(--shadow-sm)}
 .btn.primary:hover{color:#fff; border-color:var(--brass); filter:brightness(1.06)}

@@ -258,17 +258,35 @@ async function remove(entry) {
 }
 
 // ---------------------------------------------------------------- remote data
+/** Popular plugins that aren't in the official catalogue, shipped with the app. */
+let community = null;
+async function loadCommunity() {
+  if (community) return community;
+  try {
+    const r = await fetch("catalog-extra.json");
+    community = r.ok ? (await r.json()).items || [] : [];
+  } catch { community = []; }
+  return community;
+}
+
+/** The official catalogue (cached, works offline once fetched) plus the community list. */
 async function loadCatalog(force) {
+  const extra = await loadCommunity();
+  const merge = (official) => {
+    const seen = new Set(official.map((x) => folderOf(x.url).toLowerCase()));
+    return official.concat(extra.filter((x) => !seen.has(folderOf(x.url).toLowerCase())));
+  };
   const cached = store.get(LS.catalog, null);
-  if (!force && cached && Date.now() - cached.at < CATALOG_TTL) return cached.items;
+  if (!force && cached && Date.now() - cached.at < CATALOG_TTL) return merge(cached.items);
   try {
     const r = await fetch(CATALOG_URL, { cache: "no-cache" });
     if (!r.ok) throw new Error(r.status);
     const items = (await r.json()).filter((x) => x.type === "extension" && x.url);
     store.set(LS.catalog, { at: Date.now(), items });
-    return items;
+    return merge(items);
   } catch (e) {
-    if (cached) return cached.items;
+    if (cached) return merge(cached.items);
+    if (extra.length) return extra;
     throw e;
   }
 }
@@ -553,7 +571,8 @@ const skeleton = () => `<div class="card"><div class="card-bd">${'<div class="sk
 function entryRow(item, n) {
   const r = parseRepo(item.url);
   const inst = isInstalled(item.url);
-  const ribbon = item.highlight ? '<span class="ribbon">Featured</span>' : item.tool ? '<span class="ribbon tool">Tool</span>' : "";
+  const ribbon = item.highlight ? '<span class="ribbon">Featured</span>' : item.tool ? '<span class="ribbon tool">Tool</span>'
+    : item.community ? `<span class="ribbon community">★ ${fmtNum(item.stars || 0)}</span>` : "";
   return `<li class="entry" data-go="${esc(r ? repoUrl(r) : item.url)}">
     <div class="no">No.&nbsp;${pad2(n)}</div>
     <div><div class="nm">${esc(item.name || r?.repo)}</div><div class="by">by ${esc(r?.owner || "unknown")}</div></div>
@@ -571,16 +590,17 @@ async function pageCatalog(url, live) {
   const entered = items.filter((x) => isInstalled(x.url));
   const shown = f === "featured" ? items.filter((x) => x.highlight)
     : f === "tools" ? items.filter((x) => x.tool)
+    : f === "community" ? items.filter((x) => x.community).sort((a, b) => (b.stars || 0) - (a.stars || 0))
     : f === "entered" ? entered : items;
   const chip = (k, label) => `<button class="chip${f === k ? " on" : ""}" data-go="ledger://catalog${k === "all" ? "" : "?f=" + k}">${label}</button>`;
   view().innerHTML = `
     <div class="mast">
       <div class="monogram">PL</div>
       <div><div class="eyebrow">The Ledger · Folio of Extensions</div><h1>The Plugin Ledger</h1>
-      <div class="sub">Every extension in the SillyTavern catalogue, entered and accounted for.</div></div>
+      <div class="sub">The official SillyTavern catalogue and the community's most-starred plugins, entered and accounted for.</div></div>
     </div>
-    <div class="tally"><span><b>${items.length}</b>in the catalogue</span><span><b>${installed?.size ?? 0}</b>entered here</span></div>
-    <div class="chips">${chip("all", "All")}${chip("featured", "Featured")}${chip("tools", "Tools")}${chip("entered", "Entered")}</div>
+    <div class="tally"><span><b>${items.length}</b>in the catalogue</span><span><b>${items.filter((x) => x.community).length}</b>from the community</span><span><b>${installed?.size ?? 0}</b>entered</span></div>
+    <div class="chips">${chip("all", "All")}${chip("featured", "Featured")}${chip("community", "Community")}${chip("tools", "Tools")}${chip("entered", "Entered")}</div>
     <div class="card">${shown.length ? `<ol class="entries">${shown.map((x, i) => entryRow(x, i + 1)).join("")}</ol>`
       : emptyState("∅", "No entries", "Nothing in this column yet.")}</div>
     <p class="faint" style="text-align:center;font-size:.86rem">Not listed? Paste any GitHub repository into the address bar.</p>`;
@@ -685,7 +705,7 @@ async function pagePlugin(r, live) {
   view().innerHTML = `
     <div class="card"><div class="folio">
       <div class="owner">${meta.owner?.avatar_url ? `<img alt="" src="${esc(meta.owner.avatar_url)}&s=56" referrerpolicy="no-referrer">` : ""}
-        <div class="eyebrow">${listed ? "In the catalogue" : "Uncatalogued"} · ${esc(r.owner)}</div></div>
+        <div class="eyebrow">${listed?.community ? "Community pick" : listed ? "In the catalogue" : "Uncatalogued"} · ${esc(r.owner)}</div></div>
       <h1>${esc(name)}</h1>
       <p class="lede">${esc(listed?.description || meta.description || "")}</p>
       <div class="meta">${metaBits}</div>

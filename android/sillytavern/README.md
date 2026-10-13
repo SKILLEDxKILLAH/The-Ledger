@@ -13,6 +13,11 @@ second device needed.
   panel is open the menu button becomes a back arrow, and Android's back gesture
   closes the plugin browser, then the menu, then the open panel, before leaving
   the app.
+- **Characters.** A search field that is always visible, labelled actions
+  (New, Import, From URL, Group chat), sorting, tags and pages folded into
+  **Sort & filter**, portrait cards with a two-line description, a count, an empty
+  state that points to importing a card, and a **Chat with …** button on a
+  character's page that takes you straight into the chat.
 - **Getting started.** The welcome screen shows a four-step guide (connect a
   model, choose a character, name your persona, add plugins) that ticks steps
   off as you finish them. Hide it from the guide itself; bring it back from the
@@ -27,8 +32,11 @@ second device needed.
   top bar) opens a small browser for plugins (UI extensions), with:
   - tabs, back/forward/reload and an address bar that takes a search,
     `owner/repo` or any GitHub URL;
-  - the official SillyTavern catalogue (Featured, Tools, Entered filters), plus
-    a GitHub search for plugins that aren't catalogued;
+  - the official SillyTavern catalogue plus a **Community** list of popular
+    plugins that aren't in it (`ledger/public/catalog-extra.json`: the
+    most-starred SillyTavern UI extensions on GitHub, each checked for a
+    `manifest.json`), with Featured, Community, Tools and Entered filters and a
+    GitHub search for anything else;
   - a page per plugin with its stars, last update, licence, manifest and
     rendered readme;
   - one-tap Install, plus Update and Remove for installed ("entered") plugins
