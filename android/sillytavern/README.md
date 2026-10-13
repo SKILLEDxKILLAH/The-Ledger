@@ -10,8 +10,9 @@ second device needed.
   brass and hunter green on ruled ledger paper, set in EB Garamond and Cormorant.
   Chat messages read as ledger entries and panels as bound folios. You can switch
   themes in User Settings as usual; the source is `ledger/public/ledger-theme.css`.
-- **The Plugin Ledger.** A compass icon in SillyTavern's top bar opens a small
-  browser for plugins (UI extensions), with:
+- **The Plugin Ledger.** A compass icon in SillyTavern's top bar (also in the
+  Extensions wand menu, and as a floating compass if a layout plugin hides the
+  top bar) opens a small browser for plugins (UI extensions), with:
   - tabs, back/forward/reload and an address bar that takes a search,
     `owner/repo` or any GitHub URL;
   - the official SillyTavern catalogue (Featured, Tools, Entered filters), plus
@@ -20,6 +21,11 @@ second device needed.
     rendered readme;
   - one-tap Install, plus Update and Remove for installed ("entered") plugins
     and a Shelf for bookmarks.
+
+  Android has no `git` binary and SillyTavern's own update path needs one, so
+  the app starts SillyTavern with its built-in git client and auto-update off,
+  and the explorer's **Update** checks the repository's version, then
+  reinstalls the plugin. The plugin's settings are kept.
 
   The explorer is served by SillyTavern itself (`/ledger/explorer.html`), so it
   uses the server's own extension API. Readmes are rendered through an

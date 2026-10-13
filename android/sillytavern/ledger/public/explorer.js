@@ -17,7 +17,7 @@
 // ---------------------------------------------------------------- constants
 const CATALOG_URL = "https://raw.githubusercontent.com/SillyTavern/SillyTavern-Content/main/index.json";
 const HOME = "ledger://catalog";
-const LS = { tabs: "ledger.explorer.tabs", shelf: "ledger.explorer.shelf", catalog: "ledger.explorer.catalog", dirty: "ledger.explorer.dirty" };
+const LS = { tabs: "ledger.explorer.tabs", shelf: "ledger.explorer.shelf", catalog: "ledger.explorer.catalog", dirty: "ledger.explorer.dirty", sources: "ledger.explorer.sources" };
 const CATALOG_TTL = 6 * 3600e3;
 const MAX_TABS = 8;
 
@@ -131,44 +131,104 @@ function markDirty() {
   $("#banner").hidden = false;
 }
 
-async function install(url, btn) {
+/** Where each installed plugin came from, so Update can fetch it again. */
+const sources = {
+  get(folder) { return store.get(LS.sources, {})[folder.toLowerCase()]; },
+  set(url) { const m = store.get(LS.sources, {}); m[folderOf(url).toLowerCase()] = url; store.set(LS.sources, m); },
+};
+
+async function install(url, btn, { global = false, quiet = false } = {}) {
   const label = btn?.innerHTML;
   if (btn) { btn.disabled = true; btn.textContent = "Entering…"; }
   loading(true);
   try {
-    const res = await api("/api/extensions/install", { url });
+    const res = await api("/api/extensions/install", { url, global });
+    sources.set(url);
     await loadInstalled(true);
     markDirty();
-    toast(`Entered into the ledger: ${res.display_name || folderOf(url)}${res.version ? " v" + res.version : ""}`, "good");
-    return true;
+    if (!quiet) toast(`Entered into the ledger: ${res.display_name || folderOf(url)}${res.version ? " v" + res.version : ""}`, "good");
+    return res;
   } catch (e) {
-    toast(e.status === 409 ? "That plugin is already entered." : `Could not install: ${e.message.slice(0, 140)}`, "bad");
+    if (!quiet) toast(e.status === 409 ? "That plugin is already entered." : `Could not install: ${e.message.slice(0, 140)}`, "bad");
     if (btn) { btn.disabled = false; btn.innerHTML = label; }
-    return false;
+    if (quiet) throw e;
+    return null;
   } finally {
     loading(false);
   }
 }
 
+/** The repository an installed plugin came from: remembered, catalogued, or its manifest's home page. */
+async function sourceOf(entry) {
+  const remembered = entry && sources.get(entry.folder);
+  if (remembered) return remembered;
+  const catalog = await loadCatalog().catch(() => []);
+  const listed = catalog.find((x) => folderOf(x.url).toLowerCase() === entry.folder.toLowerCase());
+  if (listed) return listed.url;
+  const home = parseRepo(entry.manifest.homePage || "");
+  return home && home.repo.toLowerCase() === entry.folder.toLowerCase() ? repoUrl(home) : null;
+}
+
+/*
+ * SillyTavern's own update endpoint shells out to a system `git`, which Android
+ * does not have. Install uses SillyTavern's built-in git client, so an update here
+ * is: check the repository's manifest version, then remove and install again.
+ * The plugin's settings live in SillyTavern's settings and survive this.
+ */
 async function update(entry, btn) {
-  if (btn) { btn.disabled = true; btn.textContent = "Updating…"; }
+  const name = entry.manifest.display_name || entry.folder;
+  const url = await sourceOf(entry);
+  if (!url) {
+    toast(`Can't tell where ${name} came from. Remove it, then install it again from its page.`, "bad");
+    return;
+  }
+  const r = parseRepo(url);
+  if (btn) { btn.disabled = true; btn.textContent = "Checking…"; }
+  let latest = null;
+  try {
+    const meta = await ghApi(`repos/${r.owner}/${r.repo}`).catch(() => ({}));
+    latest = (await cachedJson(raw(r, meta.default_branch || "HEAD", "manifest.json")))?.version || null;
+  } catch { /* unknown; offer the reinstall anyway */ }
+  const current = entry.manifest.version || null;
+  const same = latest && current && latest === current;
+  const ok = await confirmDialog({
+    title: same ? `${name} is current` : `Update ${name}?`,
+    body: same
+      ? `v${current} is the newest version in its repository. Reinstall anyway to pick up any later fixes?`
+      : `${current ? "v" + current : "This copy"} will be replaced with ${latest ? "v" + latest : "the repository's latest version"}. Its settings are kept.`,
+    yes: same ? "Reinstall" : "Update",
+    danger: false,
+  });
+  if (!ok) { if (btn) { btn.disabled = false; btn.innerHTML = `${svg("update")}Update`; } return; }
+  if (btn) btn.textContent = "Updating…";
   loading(true);
   try {
-    const res = await api("/api/extensions/update", { extensionName: entry.folder, global: entry.global });
-    markDirty();
-    toast(res.isUpToDate ? `${entry.folder} is already current.` : `${entry.folder} updated to ${res.shortCommitHash || "the latest commit"}.`, "good");
+    await api("/api/extensions/delete", { extensionName: entry.folder, global: entry.global });
+    try {
+      const res = await install(url, null, { global: entry.global, quiet: true });
+      toast(`${res.display_name || name} updated${res.version ? " to v" + res.version : ""}.`, "good");
+    } catch (e) {
+      await loadInstalled(true);
+      markDirty();
+      toast(`The old copy was removed but the new one failed to install (${e.message.slice(0, 100)}). Tap Install on its page to restore it.`, "bad");
+      go(repoUrl(r));
+      return;
+    }
   } catch (e) {
     toast(`Update failed: ${e.message.slice(0, 140)}`, "bad");
   } finally {
     loading(false);
-    if (btn) { btn.disabled = false; btn.innerHTML = `${svg("update")}Update`; }
   }
+  render();
 }
 
-function confirmRemove(name) {
+function confirmDialog({ title, body, yes = "Remove", no = "Keep it", danger = true }) {
   return new Promise((resolve) => {
-    $("#modalTitle").textContent = `Strike ${name} from the ledger?`;
-    $("#modalBody").textContent = "The plugin's files are deleted from this device. Its settings stay in your SillyTavern settings in case you enter it again.";
+    $("#modalTitle").textContent = title;
+    $("#modalBody").textContent = body;
+    $("#modalYes").textContent = yes;
+    $("#modalYes").className = `btn ${danger ? "danger" : "primary"}`;
+    $("#modalNo").textContent = no;
     $("#modal").hidden = false;
     const done = (v) => { $("#modal").hidden = true; resolve(v); };
     $("#modalYes").onclick = () => done(true);
@@ -177,7 +237,11 @@ function confirmRemove(name) {
 }
 
 async function remove(entry) {
-  if (!(await confirmRemove(entry.manifest.display_name || entry.folder))) return false;
+  const ok = await confirmDialog({
+    title: `Strike ${entry.manifest.display_name || entry.folder} from the ledger?`,
+    body: "The plugin's files are deleted from this device. Its settings stay in your SillyTavern settings in case you enter it again.",
+  });
+  if (!ok) return false;
   loading(true);
   try {
     await api("/api/extensions/delete", { extensionName: entry.folder, global: entry.global });

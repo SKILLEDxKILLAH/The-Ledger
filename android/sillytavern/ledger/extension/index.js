@@ -79,6 +79,46 @@ function addButton() {
     return true;
 }
 
-if (!addButton()) {
-    const timer = setInterval(() => addButton() && clearInterval(timer), 250);
+// Second way in: the Extensions (magic wand) menu, which layout plugins keep.
+function addMenuItem() {
+    const menu = document.getElementById('extensionsMenu');
+    if (!menu) return false;
+    if (document.getElementById('ledger-explorer-menu')) return true;
+    const item = document.createElement('div');
+    item.id = 'ledger-explorer-menu';
+    item.className = 'list-group-item flex-container flexGap5 interactable';
+    item.tabIndex = 0;
+    item.innerHTML = '<div class="fa-fw fa-solid fa-compass extensionsMenuExtensionButton"></div><span>Plugin Ledger</span>';
+    item.addEventListener('click', () => openExplorer());
+    menu.append(item);
+    return true;
 }
+
+// Third way in: if a layout plugin hides the top bar, float a compass instead.
+function syncFloatingButton() {
+    const top = document.getElementById('ledger-explorer-button');
+    const hidden = !top || top.offsetParent === null;
+    let fab = document.getElementById('ledger-explorer-fab');
+    if (hidden && !fab) {
+        fab = document.createElement('button');
+        fab.id = 'ledger-explorer-fab';
+        fab.type = 'button';
+        fab.title = 'The Plugin Ledger';
+        fab.setAttribute('aria-label', 'Open the Plugin Ledger');
+        fab.innerHTML = '<i class="fa-solid fa-compass"></i>';
+        fab.addEventListener('click', () => openExplorer());
+        document.body.append(fab);
+    } else if (!hidden && fab) {
+        fab.remove();
+    }
+}
+
+let tries = 0;
+const timer = setInterval(() => {
+    const done = addButton() & addMenuItem();
+    if (done || ++tries > 120) clearInterval(timer); // give up after 30 s
+}, 250);
+addButton();
+addMenuItem();
+setTimeout(syncFloatingButton, 3000);
+setInterval(syncFloatingButton, 5000);

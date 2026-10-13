@@ -283,6 +283,11 @@ public class ServerService extends Service {
         env.put("TMPDIR", getCacheDir().getPath());
         env.put("NODE_ENV", "production");
         env.put("FORCE_COLOR", "0");
+        // Android has no `git` binary: use SillyTavern's built-in git client, and skip
+        // the startup auto-update, which always shells out to system git. The Plugin
+        // Ledger updates plugins by reinstalling them through the built-in client.
+        env.put("SILLYTAVERN_GIT_BACKEND", "builtin");
+        env.put("SILLYTAVERN_EXTENSIONS_AUTOUPDATE", "false");
 
         synchronized (logTail) {
             logTail.clear();
