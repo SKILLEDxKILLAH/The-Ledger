@@ -105,6 +105,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           name: apk-x86_64
@@ -124,17 +126,7 @@ jobs:
           target: google_apis
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -memory 4096
-          script: |
-            adb install -r -g out/*.apk
-            adb shell am start -n app.sillytavern.pocket/.MainActivity
-            adb forward tcp:8000 tcp:8000
-            ok=0; for i in $(seq 1 120); do if curl -sf -o /tmp/index.html http://127.0.0.1:8000/; then ok=1; break; fi; sleep 5; done
-            sleep 20
-            adb exec-out screencap -p > screenshot.png || true
-            adb shell run-as app.sillytavern.pocket cat files/logs/server.log > server.log || true
-            adb logcat -d > logcat.txt || true
-            tail -40 server.log || true
-            grep -qi sillytavern /tmp/index.html && [ "$ok" = 1 ]
+          script: bash android/sillytavern/scripts/emulator-boot-test.sh out/*.apk
 
       - uses: actions/upload-artifact@v4
         if: always()
