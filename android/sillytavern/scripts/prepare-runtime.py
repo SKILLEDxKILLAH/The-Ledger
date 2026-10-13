@@ -105,16 +105,19 @@ def main():
     node = os.path.join(usr, "bin/node")
     node = os.path.realpath(node)
 
-    # Index every shared object by SONAME (and file name, for links).
+    # Index every shared object by SONAME and by file name (symlinks resolved).
     by_soname = {}
-    for dirpath, _, files in os.walk(os.path.join(usr, "lib")):
+    for dirpath, _, files in os.walk(root):
         for fn in files:
-            p = os.path.join(dirpath, fn)
-            if os.path.islink(p) or not (".so" in fn):
+            if ".so" not in fn:
+                continue
+            p = os.path.realpath(os.path.join(dirpath, fn))
+            if not os.path.isfile(p):
                 continue
             info = elf_info(p)
             if info:
-                by_soname[info[0] or fn] = p
+                if info[0]:
+                    by_soname[info[0]] = p
                 by_soname.setdefault(fn, p)
 
     # ELF NEEDED closure starting at the node binary.
@@ -129,6 +132,7 @@ def main():
         needed[so] = by_soname[so]
         queue.extend(elf_info(by_soname[so])[1])
     if missing:
+        print("libraries found in packages:", " ".join(sorted(by_soname)))
         sys.exit(f"unresolved libraries (not in Termux packages or Android): {sorted(missing)}")
 
     out = os.path.join(PROJECT, "app/src/main/jniLibs", abi)
