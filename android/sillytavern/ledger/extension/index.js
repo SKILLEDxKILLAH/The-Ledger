@@ -284,7 +284,7 @@ function renderGuide() {
             <div class="lg-count">${steps.length - left}<span>/${steps.length}</span></div>
         </div>
         <ol class="lg-steps">${steps.map((s, i) => `
-            <li class="${s.done ? 'done' : ''}">
+            <li class="${s.done ? 'done' : i === steps.findIndex((x) => !x.done) ? 'next' : ''}">
                 <span class="lg-no">${s.done ? '<i class="fa-solid fa-check"></i>' : i + 1}</span>
                 <span class="lg-text"><b>${esc(s.title)}</b><small>${esc(s.body)}</small></span>
                 ${s.done ? '' : `<button type="button" class="menu_button lg-go" data-panel="${s.panel}">${esc(s.cta)}</button>`}
