@@ -6,6 +6,18 @@ second device needed.
 
 ## The Ledger look
 
+- **Phone layout.** On a phone, SillyTavern's row of unlabelled top-bar icons is
+  replaced by a slim header: **Menu**, the current screen's name, **Plugins** and
+  **Characters**. The menu lists every panel with a label and a one-line
+  description, grouped as *Start here*, *Writing* and *Look & add-ons*. When a
+  panel is open the menu button becomes a back arrow, and Android's back gesture
+  closes the plugin browser, then the menu, then the open panel, before leaving
+  the app.
+- **Getting started.** The welcome screen shows a four-step guide (connect a
+  model, choose a character, name your persona, add plugins) that ticks steps
+  off as you finish them. Hide it from the guide itself; bring it back from the
+  menu.
+
 - **Theme.** New installs open in the *The Ledger* SillyTavern theme: oxblood,
   brass and hunter green on ruled ledger paper, set in EB Garamond and Cormorant.
   Chat messages read as ledger entries and panels as bound folios. You can switch
@@ -69,7 +81,8 @@ second device needed.
 
 - `app/`: the Android shell (foreground service + WebView).
 - `ledger/`: The Ledger's additions. `public/` holds the theme CSS and plugin
-  explorer, `extension/` the built-in extension that adds the top-bar button,
+  explorer, `extension/` the built-in extension (phone header, menu, guide and
+  the explorer's entry points),
   `theme.json` the theme preset and `boot.html` the boot screen.
 - `scripts/apply-ledger.py`: installs `ledger/` into a SillyTavern checkout and
   makes the theme the default for new users.
